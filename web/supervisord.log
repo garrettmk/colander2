@@ -1,0 +1,1093 @@
+2018-03-18 03:12:45,530 CRIT Set uid to user 0
+2018-03-18 03:12:45,539 INFO RPC interface 'supervisor' initialized
+2018-03-18 03:12:45,540 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-18 03:12:45,546 INFO supervisord started with pid 1
+2018-03-18 03:12:46,550 INFO spawned: 'gunicorn' with pid 9
+2018-03-18 03:12:46,905 INFO exited: gunicorn (exit status 3; not expected)
+2018-03-18 03:12:47,910 INFO spawned: 'gunicorn' with pid 13
+2018-03-18 03:12:49,583 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-18 03:22:28,342 CRIT Set uid to user 0
+2018-03-18 03:22:28,355 INFO RPC interface 'supervisor' initialized
+2018-03-18 03:22:28,356 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-18 03:22:28,360 INFO supervisord started with pid 1
+2018-03-18 03:22:29,367 INFO spawned: 'gunicorn' with pid 9
+2018-03-18 03:22:30,941 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-18 03:42:38,191 CRIT Set uid to user 0
+2018-03-18 03:42:38,501 INFO RPC interface 'supervisor' initialized
+2018-03-18 03:42:38,502 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-18 03:42:38,505 INFO supervisord started with pid 1
+2018-03-18 03:42:39,513 INFO spawned: 'gunicorn' with pid 9
+2018-03-18 03:42:41,052 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-18 03:52:05,438 CRIT Set uid to user 0
+2018-03-18 03:52:05,447 INFO RPC interface 'supervisor' initialized
+2018-03-18 03:52:05,449 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-18 03:52:05,453 INFO supervisord started with pid 1
+2018-03-18 03:52:06,459 INFO spawned: 'gunicorn' with pid 10
+2018-03-18 03:52:08,033 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-19 00:33:57,944 WARN received SIGTERM indicating exit request
+2018-03-19 00:33:57,945 INFO waiting for gunicorn to die
+2018-03-19 00:33:58,186 INFO stopped: gunicorn (exit status 0)
+2018-03-19 00:35:39,536 CRIT Set uid to user 0
+2018-03-19 00:35:39,549 INFO RPC interface 'supervisor' initialized
+2018-03-19 00:35:39,550 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-19 00:35:39,554 INFO supervisord started with pid 1
+2018-03-19 00:35:40,558 INFO spawned: 'gunicorn' with pid 9
+2018-03-19 00:35:41,797 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-19 00:38:52,170 WARN received SIGTERM indicating exit request
+2018-03-19 00:38:52,172 INFO waiting for gunicorn to die
+2018-03-19 00:38:52,411 INFO stopped: gunicorn (exit status 0)
+2018-03-19 00:38:54,775 CRIT Set uid to user 0
+2018-03-19 00:38:54,783 INFO RPC interface 'supervisor' initialized
+2018-03-19 00:38:54,784 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-19 00:38:54,787 INFO supervisord started with pid 1
+2018-03-19 00:38:55,790 INFO spawned: 'gunicorn' with pid 9
+2018-03-19 00:38:57,061 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-19 00:43:44,356 WARN received SIGTERM indicating exit request
+2018-03-19 00:43:44,357 INFO waiting for gunicorn to die
+2018-03-19 00:43:44,497 INFO stopped: gunicorn (exit status 0)
+2018-03-19 00:43:59,232 CRIT Set uid to user 0
+2018-03-19 00:43:59,242 INFO RPC interface 'supervisor' initialized
+2018-03-19 00:43:59,243 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-19 00:43:59,247 INFO supervisord started with pid 1
+2018-03-19 00:44:00,250 INFO spawned: 'gunicorn' with pid 9
+2018-03-19 00:44:01,535 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-19 00:45:25,572 WARN received SIGTERM indicating exit request
+2018-03-19 00:45:25,574 INFO waiting for gunicorn to die
+2018-03-19 00:45:25,712 INFO stopped: gunicorn (exit status 0)
+2018-03-19 00:45:40,041 CRIT Set uid to user 0
+2018-03-19 00:45:40,050 INFO RPC interface 'supervisor' initialized
+2018-03-19 00:45:40,051 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-19 00:45:40,055 INFO supervisord started with pid 1
+2018-03-19 00:45:41,059 INFO spawned: 'gunicorn' with pid 9
+2018-03-19 00:45:42,292 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-19 00:51:47,185 CRIT Set uid to user 0
+2018-03-19 00:51:47,196 INFO RPC interface 'supervisor' initialized
+2018-03-19 00:51:47,197 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-19 00:51:47,202 INFO supervisord started with pid 1
+2018-03-19 00:51:48,207 INFO spawned: 'gunicorn' with pid 9
+2018-03-19 00:51:49,441 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-19 00:58:13,181 WARN received SIGTERM indicating exit request
+2018-03-19 00:58:13,182 INFO waiting for gunicorn to die
+2018-03-19 00:58:13,321 INFO stopped: gunicorn (exit status 0)
+2018-03-19 00:58:15,539 CRIT Set uid to user 0
+2018-03-19 00:58:15,549 INFO RPC interface 'supervisor' initialized
+2018-03-19 00:58:15,550 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-19 00:58:15,555 INFO supervisord started with pid 1
+2018-03-19 00:58:16,558 INFO spawned: 'gunicorn' with pid 9
+2018-03-19 00:58:17,794 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-19 01:38:09,051 WARN received SIGTERM indicating exit request
+2018-03-19 01:38:09,053 INFO waiting for gunicorn to die
+2018-03-19 01:38:09,300 INFO stopped: gunicorn (exit status 0)
+2018-03-19 01:38:11,702 CRIT Set uid to user 0
+2018-03-19 01:38:11,713 INFO RPC interface 'supervisor' initialized
+2018-03-19 01:38:11,714 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-19 01:38:11,721 INFO supervisord started with pid 1
+2018-03-19 01:38:12,725 INFO spawned: 'gunicorn' with pid 9
+2018-03-19 01:38:13,984 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-19 03:42:01,776 WARN received SIGTERM indicating exit request
+2018-03-19 03:42:01,778 INFO waiting for gunicorn to die
+2018-03-19 03:42:02,020 INFO stopped: gunicorn (exit status 0)
+2018-03-19 03:42:17,734 CRIT Set uid to user 0
+2018-03-19 03:42:17,745 INFO RPC interface 'supervisor' initialized
+2018-03-19 03:42:17,746 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-19 03:42:17,750 INFO supervisord started with pid 1
+2018-03-19 03:42:18,754 INFO spawned: 'gunicorn' with pid 9
+2018-03-19 03:42:20,014 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-19 03:46:27,810 CRIT Set uid to user 0
+2018-03-19 03:46:27,821 INFO RPC interface 'supervisor' initialized
+2018-03-19 03:46:27,824 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-19 03:46:27,828 INFO supervisord started with pid 1
+2018-03-19 03:46:28,832 INFO spawned: 'gunicorn' with pid 9
+2018-03-19 03:46:30,093 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-24 20:16:20,025 WARN received SIGTERM indicating exit request
+2018-03-24 20:16:20,036 INFO waiting for gunicorn to die
+2018-03-24 20:16:20,440 INFO stopped: gunicorn (exit status 0)
+2018-03-24 20:21:44,444 CRIT Set uid to user 0
+2018-03-24 20:21:44,455 INFO RPC interface 'supervisor' initialized
+2018-03-24 20:21:44,456 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-24 20:21:44,460 INFO supervisord started with pid 1
+2018-03-24 20:21:45,464 INFO spawned: 'gunicorn' with pid 8
+2018-03-24 20:21:46,250 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:21:47,256 INFO spawned: 'gunicorn' with pid 13
+2018-03-24 20:21:48,011 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:21:50,016 INFO spawned: 'gunicorn' with pid 18
+2018-03-24 20:21:50,810 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:21:53,821 INFO spawned: 'gunicorn' with pid 23
+2018-03-24 20:21:54,459 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:21:55,464 INFO gave up: gunicorn entered FATAL state, too many start retries too quickly
+2018-03-24 20:35:44,758 WARN received SIGTERM indicating exit request
+2018-03-24 20:36:12,992 CRIT Set uid to user 0
+2018-03-24 20:36:13,015 INFO RPC interface 'supervisor' initialized
+2018-03-24 20:36:13,017 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-24 20:36:13,027 INFO supervisord started with pid 1
+2018-03-24 20:36:14,033 INFO spawned: 'gunicorn' with pid 9
+2018-03-24 20:36:15,201 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-24 20:36:15,424 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:16,429 INFO spawned: 'gunicorn' with pid 14
+2018-03-24 20:36:17,481 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-24 20:36:17,768 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:18,773 INFO spawned: 'gunicorn' with pid 19
+2018-03-24 20:36:19,924 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-24 20:36:20,119 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:21,126 INFO spawned: 'gunicorn' with pid 24
+2018-03-24 20:36:22,049 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:23,054 INFO spawned: 'gunicorn' with pid 29
+2018-03-24 20:36:24,079 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-24 20:36:24,166 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:25,170 INFO spawned: 'gunicorn' with pid 34
+2018-03-24 20:36:26,246 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-24 20:36:26,248 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:27,253 INFO spawned: 'gunicorn' with pid 39
+2018-03-24 20:36:28,645 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-24 20:36:29,265 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:30,271 INFO spawned: 'gunicorn' with pid 44
+2018-03-24 20:36:31,290 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-24 20:36:31,291 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:32,295 INFO spawned: 'gunicorn' with pid 49
+2018-03-24 20:36:33,346 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-24 20:36:33,419 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:34,426 INFO spawned: 'gunicorn' with pid 54
+2018-03-24 20:36:35,190 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:36,197 INFO spawned: 'gunicorn' with pid 59
+2018-03-24 20:36:36,881 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:38,891 INFO spawned: 'gunicorn' with pid 64
+2018-03-24 20:36:39,680 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:42,690 INFO spawned: 'gunicorn' with pid 69
+2018-03-24 20:36:43,402 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:36:44,405 INFO gave up: gunicorn entered FATAL state, too many start retries too quickly
+2018-03-24 20:50:17,173 WARN received SIGTERM indicating exit request
+2018-03-24 20:50:28,944 CRIT Set uid to user 0
+2018-03-24 20:50:28,964 INFO RPC interface 'supervisor' initialized
+2018-03-24 20:50:28,966 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-24 20:50:28,971 INFO supervisord started with pid 1
+2018-03-24 20:50:29,977 INFO spawned: 'gunicorn' with pid 9
+2018-03-24 20:50:30,869 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:50:31,875 INFO spawned: 'gunicorn' with pid 14
+2018-03-24 20:50:32,750 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:50:34,763 INFO spawned: 'gunicorn' with pid 19
+2018-03-24 20:50:35,660 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:50:38,675 INFO spawned: 'gunicorn' with pid 29
+2018-03-24 20:50:39,352 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 20:50:40,355 INFO gave up: gunicorn entered FATAL state, too many start retries too quickly
+2018-03-24 22:03:52,931 WARN received SIGTERM indicating exit request
+2018-03-24 22:04:16,427 CRIT Set uid to user 0
+2018-03-24 22:04:16,439 INFO RPC interface 'supervisor' initialized
+2018-03-24 22:04:16,440 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-24 22:04:16,445 INFO supervisord started with pid 1
+2018-03-24 22:04:17,450 INFO spawned: 'gunicorn' with pid 9
+2018-03-24 22:04:18,476 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-24 22:04:18,632 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 22:04:19,638 INFO spawned: 'gunicorn' with pid 14
+2018-03-24 22:04:20,431 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 22:04:21,436 INFO spawned: 'gunicorn' with pid 19
+2018-03-24 22:04:22,393 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 22:04:24,404 INFO spawned: 'gunicorn' with pid 24
+2018-03-24 22:04:25,120 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 22:04:28,131 INFO spawned: 'gunicorn' with pid 35
+2018-03-24 22:04:28,816 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 22:04:29,820 INFO gave up: gunicorn entered FATAL state, too many start retries too quickly
+2018-03-24 22:42:02,089 WARN received SIGTERM indicating exit request
+2018-03-24 22:51:28,643 CRIT Set uid to user 0
+2018-03-24 22:51:28,661 INFO RPC interface 'supervisor' initialized
+2018-03-24 22:51:28,661 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-24 22:51:28,665 INFO supervisord started with pid 1
+2018-03-24 22:51:29,670 INFO spawned: 'gunicorn' with pid 9
+2018-03-24 22:51:30,528 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 22:51:31,532 INFO spawned: 'gunicorn' with pid 14
+2018-03-24 22:51:32,213 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 22:51:34,219 INFO spawned: 'gunicorn' with pid 19
+2018-03-24 22:51:34,873 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 22:51:37,884 INFO spawned: 'gunicorn' with pid 24
+2018-03-24 22:51:38,647 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-24 22:51:39,650 INFO gave up: gunicorn entered FATAL state, too many start retries too quickly
+2018-03-25 04:51:48,170 WARN received SIGTERM indicating exit request
+2018-03-25 04:52:08,547 CRIT Set uid to user 0
+2018-03-25 04:52:08,557 INFO RPC interface 'supervisor' initialized
+2018-03-25 04:52:08,557 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-25 04:52:08,562 INFO supervisord started with pid 1
+2018-03-25 04:52:09,565 INFO spawned: 'gunicorn' with pid 9
+2018-03-25 04:52:10,368 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-25 04:52:11,373 INFO spawned: 'gunicorn' with pid 14
+2018-03-25 04:52:12,035 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-25 04:52:14,041 INFO spawned: 'gunicorn' with pid 19
+2018-03-25 04:52:14,699 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-25 04:52:17,709 INFO spawned: 'gunicorn' with pid 24
+2018-03-25 04:52:18,378 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-25 04:52:19,385 INFO gave up: gunicorn entered FATAL state, too many start retries too quickly
+2018-03-25 05:06:52,428 CRIT Set uid to user 0
+2018-03-25 05:06:52,437 INFO RPC interface 'supervisor' initialized
+2018-03-25 05:06:52,439 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-25 05:06:52,443 INFO supervisord started with pid 1
+2018-03-25 05:06:53,448 INFO spawned: 'gunicorn' with pid 9
+2018-03-25 05:06:54,228 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-25 05:06:55,233 INFO spawned: 'gunicorn' with pid 14
+2018-03-25 05:06:55,889 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-25 05:06:57,897 INFO spawned: 'gunicorn' with pid 19
+2018-03-25 05:06:58,542 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-25 05:07:01,555 INFO spawned: 'gunicorn' with pid 24
+2018-03-25 05:07:02,212 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-25 05:07:03,215 INFO gave up: gunicorn entered FATAL state, too many start retries too quickly
+2018-03-27 01:51:58,521 WARN received SIGTERM indicating exit request
+2018-03-27 01:44:26,342 CRIT Set uid to user 0
+2018-03-27 01:44:26,357 INFO RPC interface 'supervisor' initialized
+2018-03-27 01:44:26,358 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-03-27 01:44:26,362 INFO supervisord started with pid 1
+2018-03-27 01:44:27,367 INFO spawned: 'gunicorn' with pid 9
+2018-03-27 01:44:28,834 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-03-27 01:44:28,987 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-27 01:44:29,992 INFO spawned: 'gunicorn' with pid 14
+2018-03-27 01:44:30,679 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-27 01:44:31,683 INFO spawned: 'gunicorn' with pid 19
+2018-03-27 01:44:32,348 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-27 01:44:34,356 INFO spawned: 'gunicorn' with pid 24
+2018-03-27 01:44:35,225 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-27 01:44:38,236 INFO spawned: 'gunicorn' with pid 29
+2018-03-27 01:44:38,902 INFO exited: gunicorn (exit status 4; not expected)
+2018-03-27 01:44:39,908 INFO gave up: gunicorn entered FATAL state, too many start retries too quickly
+2018-04-01 20:57:40,988 WARN received SIGTERM indicating exit request
+2018-04-01 21:04:49,750 CRIT Set uid to user 0
+2018-04-01 21:04:49,764 INFO RPC interface 'supervisor' initialized
+2018-04-01 21:04:49,765 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-01 21:04:49,769 INFO supervisord started with pid 1
+2018-04-01 21:04:50,772 INFO spawned: 'gunicorn' with pid 9
+2018-04-01 21:04:52,233 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-02 00:08:33,380 WARN received SIGTERM indicating exit request
+2018-04-02 00:08:33,381 INFO waiting for gunicorn to die
+2018-04-02 00:08:33,627 INFO stopped: gunicorn (exit status 0)
+2018-04-02 00:10:42,246 CRIT Set uid to user 0
+2018-04-02 00:10:42,260 INFO RPC interface 'supervisor' initialized
+2018-04-02 00:10:42,261 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-02 00:10:42,268 INFO supervisord started with pid 1
+2018-04-02 00:10:43,272 INFO spawned: 'gunicorn' with pid 9
+2018-04-02 00:10:44,511 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-02 00:10:44,711 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-02 00:10:45,716 INFO spawned: 'gunicorn' with pid 14
+2018-04-02 00:10:46,430 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-02 00:10:47,434 INFO spawned: 'gunicorn' with pid 19
+2018-04-02 00:10:48,147 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-02 00:10:50,151 INFO spawned: 'gunicorn' with pid 24
+2018-04-02 00:10:50,867 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-02 00:10:53,883 INFO spawned: 'gunicorn' with pid 29
+2018-04-02 00:10:54,622 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-02 00:10:55,626 INFO gave up: gunicorn entered FATAL state, too many start retries too quickly
+2018-04-02 00:11:59,147 CRIT Set uid to user 0
+2018-04-02 00:11:59,461 INFO RPC interface 'supervisor' initialized
+2018-04-02 00:11:59,462 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-02 00:11:59,466 INFO supervisord started with pid 1
+2018-04-02 00:12:00,469 INFO spawned: 'gunicorn' with pid 9
+2018-04-02 00:12:01,707 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-02 02:14:28,432 WARN received SIGTERM indicating exit request
+2018-04-02 02:14:28,433 INFO waiting for gunicorn to die
+2018-04-02 02:14:28,679 INFO stopped: gunicorn (exit status 0)
+2018-04-02 02:16:05,141 CRIT Set uid to user 0
+2018-04-02 02:16:05,155 INFO RPC interface 'supervisor' initialized
+2018-04-02 02:16:05,156 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-02 02:16:05,159 INFO supervisord started with pid 1
+2018-04-02 02:16:06,163 INFO spawned: 'gunicorn' with pid 9
+2018-04-02 02:16:07,544 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-02 02:22:58,356 WARN received SIGTERM indicating exit request
+2018-04-02 02:22:58,357 INFO waiting for gunicorn to die
+2018-04-02 02:22:58,598 INFO stopped: gunicorn (exit status 0)
+2018-04-02 02:30:28,986 CRIT Set uid to user 0
+2018-04-02 02:30:29,027 INFO RPC interface 'supervisor' initialized
+2018-04-02 02:30:29,028 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-02 02:30:29,035 INFO supervisord started with pid 1
+2018-04-02 02:30:30,039 INFO spawned: 'gunicorn' with pid 9
+2018-04-02 02:30:31,468 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-02 04:01:49,292 WARN received SIGTERM indicating exit request
+2018-04-02 04:01:49,294 INFO waiting for gunicorn to die
+2018-04-02 04:01:49,570 INFO stopped: gunicorn (exit status 0)
+2018-04-02 04:02:04,431 CRIT Set uid to user 0
+2018-04-02 04:02:04,493 INFO RPC interface 'supervisor' initialized
+2018-04-02 04:02:04,494 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-02 04:02:04,498 INFO supervisord started with pid 1
+2018-04-02 04:02:05,502 INFO spawned: 'gunicorn' with pid 9
+2018-04-02 04:02:06,916 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-07 18:36:33,028 WARN received SIGTERM indicating exit request
+2018-04-07 18:36:33,029 INFO waiting for gunicorn to die
+2018-04-07 18:36:33,276 INFO stopped: gunicorn (exit status 0)
+2018-04-07 18:39:28,782 CRIT Set uid to user 0
+2018-04-07 18:39:28,807 INFO RPC interface 'supervisor' initialized
+2018-04-07 18:39:28,808 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-07 18:39:28,812 INFO supervisord started with pid 1
+2018-04-07 18:39:29,817 INFO spawned: 'gunicorn' with pid 8
+2018-04-07 18:39:31,152 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-07 19:06:14,536 CRIT Set uid to user 0
+2018-04-07 19:06:14,573 INFO RPC interface 'supervisor' initialized
+2018-04-07 19:06:14,574 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-07 19:06:14,580 INFO supervisord started with pid 1
+2018-04-07 19:06:15,583 INFO spawned: 'gunicorn' with pid 9
+2018-04-07 19:06:17,025 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-07 19:17:48,444 WARN received SIGTERM indicating exit request
+2018-04-07 19:17:48,445 INFO waiting for gunicorn to die
+2018-04-07 19:17:48,684 INFO stopped: gunicorn (exit status 0)
+2018-04-07 19:20:04,860 CRIT Set uid to user 0
+2018-04-07 19:20:04,917 INFO RPC interface 'supervisor' initialized
+2018-04-07 19:20:04,920 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-07 19:20:04,926 INFO supervisord started with pid 1
+2018-04-07 19:20:05,930 INFO spawned: 'gunicorn' with pid 9
+2018-04-07 19:20:07,421 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-07 19:23:01,525 WARN received SIGTERM indicating exit request
+2018-04-07 19:23:01,526 INFO waiting for gunicorn to die
+2018-04-07 19:23:01,769 INFO stopped: gunicorn (exit status 0)
+2018-04-07 19:24:50,421 CRIT Set uid to user 0
+2018-04-07 19:24:50,453 INFO RPC interface 'supervisor' initialized
+2018-04-07 19:24:50,454 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-07 19:24:50,459 INFO supervisord started with pid 1
+2018-04-07 19:24:51,463 INFO spawned: 'gunicorn' with pid 9
+2018-04-07 19:24:52,857 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-07 19:26:58,927 WARN received SIGTERM indicating exit request
+2018-04-07 19:26:58,928 INFO waiting for gunicorn to die
+2018-04-07 19:26:59,165 INFO stopped: gunicorn (exit status 0)
+2018-04-07 19:33:48,459 CRIT Set uid to user 0
+2018-04-07 19:33:48,505 INFO RPC interface 'supervisor' initialized
+2018-04-07 19:33:48,506 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-07 19:33:48,511 INFO supervisord started with pid 1
+2018-04-07 19:33:49,514 INFO spawned: 'gunicorn' with pid 9
+2018-04-07 19:33:51,093 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 03:42:37,699 WARN received SIGTERM indicating exit request
+2018-04-08 03:42:37,700 INFO waiting for gunicorn to die
+2018-04-08 03:42:37,960 INFO stopped: gunicorn (exit status 0)
+2018-04-08 03:49:08,688 CRIT Set uid to user 0
+2018-04-08 03:49:08,830 INFO RPC interface 'supervisor' initialized
+2018-04-08 03:49:08,831 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-08 03:49:08,845 INFO supervisord started with pid 1
+2018-04-08 03:49:09,878 INFO spawned: 'gunicorn' with pid 9
+2018-04-08 03:49:10,934 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 04:01:46,122 WARN received SIGTERM indicating exit request
+2018-04-08 04:01:46,152 INFO waiting for gunicorn to die
+2018-04-08 04:01:46,417 INFO stopped: gunicorn (exit status 0)
+2018-04-08 04:02:03,340 CRIT Set uid to user 0
+2018-04-08 04:02:03,380 INFO RPC interface 'supervisor' initialized
+2018-04-08 04:02:03,381 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-08 04:02:03,385 INFO supervisord started with pid 1
+2018-04-08 04:02:04,396 INFO spawned: 'gunicorn' with pid 9
+2018-04-08 04:02:06,248 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 13:53:32,684 WARN received SIGTERM indicating exit request
+2018-04-08 13:53:32,695 INFO waiting for gunicorn to die
+2018-04-08 13:53:32,956 INFO stopped: gunicorn (exit status 0)
+2018-04-08 13:54:00,039 CRIT Set uid to user 0
+2018-04-08 13:54:00,084 INFO RPC interface 'supervisor' initialized
+2018-04-08 13:54:00,086 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-08 13:54:00,100 INFO supervisord started with pid 1
+2018-04-08 13:54:01,107 INFO spawned: 'gunicorn' with pid 9
+2018-04-08 13:54:02,819 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 14:27:46,313 WARN received SIGTERM indicating exit request
+2018-04-08 14:27:46,330 INFO waiting for gunicorn to die
+2018-04-08 14:27:46,656 INFO stopped: gunicorn (exit status 0)
+2018-04-08 14:29:36,893 CRIT Set uid to user 0
+2018-04-08 14:29:36,956 INFO RPC interface 'supervisor' initialized
+2018-04-08 14:29:36,957 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-08 14:29:36,962 INFO supervisord started with pid 1
+2018-04-08 14:29:37,974 INFO spawned: 'gunicorn' with pid 9
+2018-04-08 14:29:39,822 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 14:48:35,256 WARN received SIGTERM indicating exit request
+2018-04-08 14:48:35,261 INFO waiting for gunicorn to die
+2018-04-08 14:48:35,528 INFO stopped: gunicorn (exit status 0)
+2018-04-08 14:48:48,881 CRIT Set uid to user 0
+2018-04-08 14:48:48,915 INFO RPC interface 'supervisor' initialized
+2018-04-08 14:48:48,916 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-08 14:48:48,920 INFO supervisord started with pid 1
+2018-04-08 14:48:49,924 INFO spawned: 'gunicorn' with pid 9
+2018-04-08 14:48:51,373 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 16:08:04,695 WARN received SIGTERM indicating exit request
+2018-04-08 16:08:04,696 INFO waiting for gunicorn to die
+2018-04-08 16:08:04,958 INFO stopped: gunicorn (exit status 0)
+2018-04-08 16:08:24,927 CRIT Set uid to user 0
+2018-04-08 16:08:25,028 INFO RPC interface 'supervisor' initialized
+2018-04-08 16:08:25,029 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-08 16:08:25,038 INFO supervisord started with pid 1
+2018-04-08 16:08:26,044 INFO spawned: 'gunicorn' with pid 9
+2018-04-08 16:08:27,872 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 17:06:47,495 WARN received SIGTERM indicating exit request
+2018-04-08 17:06:47,497 INFO waiting for gunicorn to die
+2018-04-08 17:06:47,737 INFO stopped: gunicorn (exit status 0)
+2018-04-08 17:07:00,717 CRIT Set uid to user 0
+2018-04-08 17:07:00,764 INFO RPC interface 'supervisor' initialized
+2018-04-08 17:07:00,764 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-08 17:07:00,769 INFO supervisord started with pid 1
+2018-04-08 17:07:01,773 INFO spawned: 'gunicorn' with pid 9
+2018-04-08 17:07:03,382 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 17:07:03,824 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-08 17:07:04,830 INFO spawned: 'gunicorn' with pid 14
+2018-04-08 17:07:06,390 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 17:07:06,619 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-08 17:07:07,623 INFO spawned: 'gunicorn' with pid 19
+2018-04-08 17:07:09,000 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 17:07:09,386 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-08 17:07:10,390 INFO spawned: 'gunicorn' with pid 24
+2018-04-08 17:07:11,425 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 17:07:11,688 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-08 17:07:12,693 INFO spawned: 'gunicorn' with pid 29
+2018-04-08 17:07:13,799 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 17:07:13,962 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-08 17:07:14,968 INFO spawned: 'gunicorn' with pid 34
+2018-04-08 17:07:15,919 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-08 17:14:05,447 CRIT Set uid to user 0
+2018-04-08 17:14:05,769 INFO RPC interface 'supervisor' initialized
+2018-04-08 17:14:05,770 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-08 17:14:05,774 INFO supervisord started with pid 1
+2018-04-08 17:14:06,778 INFO spawned: 'gunicorn' with pid 9
+2018-04-08 17:14:08,178 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 17:55:35,629 WARN received SIGTERM indicating exit request
+2018-04-08 17:55:35,630 INFO waiting for gunicorn to die
+2018-04-08 17:55:35,899 INFO stopped: gunicorn (exit status 0)
+2018-04-08 17:56:20,464 CRIT Set uid to user 0
+2018-04-08 17:56:20,502 INFO RPC interface 'supervisor' initialized
+2018-04-08 17:56:20,504 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-08 17:56:20,508 INFO supervisord started with pid 1
+2018-04-08 17:56:21,514 INFO spawned: 'gunicorn' with pid 9
+2018-04-08 17:56:23,109 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 17:57:34,718 CRIT Set uid to user 0
+2018-04-08 17:57:34,750 INFO RPC interface 'supervisor' initialized
+2018-04-08 17:57:34,752 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-08 17:57:34,758 INFO supervisord started with pid 1
+2018-04-08 17:57:35,762 INFO spawned: 'gunicorn' with pid 9
+2018-04-08 17:57:37,124 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-08 18:07:29,306 CRIT Set uid to user 0
+2018-04-08 18:07:29,346 INFO RPC interface 'supervisor' initialized
+2018-04-08 18:07:29,348 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-08 18:07:29,355 INFO supervisord started with pid 1
+2018-04-08 18:07:30,360 INFO spawned: 'gunicorn' with pid 9
+2018-04-08 18:07:31,890 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-10 00:59:58,838 WARN received SIGTERM indicating exit request
+2018-04-10 00:59:58,867 INFO waiting for gunicorn to die
+2018-04-10 00:59:59,160 INFO stopped: gunicorn (exit status 0)
+2018-04-10 01:00:47,412 CRIT Set uid to user 0
+2018-04-10 01:00:47,465 INFO RPC interface 'supervisor' initialized
+2018-04-10 01:00:47,467 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-10 01:00:47,470 INFO supervisord started with pid 1
+2018-04-10 01:00:48,480 INFO spawned: 'gunicorn' with pid 9
+2018-04-10 01:00:50,016 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-12 02:00:05,944 WARN received SIGTERM indicating exit request
+2018-04-12 02:00:05,957 INFO waiting for gunicorn to die
+2018-04-12 02:00:06,219 INFO stopped: gunicorn (exit status 0)
+2018-04-12 02:00:39,326 CRIT Set uid to user 0
+2018-04-12 02:00:39,369 INFO RPC interface 'supervisor' initialized
+2018-04-12 02:00:39,371 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-12 02:00:39,375 INFO supervisord started with pid 1
+2018-04-12 02:00:40,378 INFO spawned: 'gunicorn' with pid 11
+2018-04-12 02:00:41,948 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-13 02:57:18,614 WARN received SIGTERM indicating exit request
+2018-04-13 02:57:18,638 INFO waiting for gunicorn to die
+2018-04-13 02:57:18,877 INFO stopped: gunicorn (exit status 0)
+2018-04-13 02:58:18,915 CRIT Set uid to user 0
+2018-04-13 02:58:18,947 INFO RPC interface 'supervisor' initialized
+2018-04-13 02:58:18,949 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-13 02:58:18,954 INFO supervisord started with pid 1
+2018-04-13 02:58:19,964 INFO spawned: 'gunicorn' with pid 9
+2018-04-13 02:58:21,465 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-13 03:06:50,335 WARN received SIGTERM indicating exit request
+2018-04-13 03:06:50,344 INFO waiting for gunicorn to die
+2018-04-13 03:06:50,588 INFO stopped: gunicorn (exit status 0)
+2018-04-13 03:07:04,604 CRIT Set uid to user 0
+2018-04-13 03:07:04,645 INFO RPC interface 'supervisor' initialized
+2018-04-13 03:07:04,647 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-13 03:07:04,650 INFO supervisord started with pid 1
+2018-04-13 03:07:05,655 INFO spawned: 'gunicorn' with pid 8
+2018-04-13 03:07:07,285 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-13 03:10:14,053 CRIT Set uid to user 0
+2018-04-13 03:10:14,377 INFO RPC interface 'supervisor' initialized
+2018-04-13 03:10:14,378 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-13 03:10:14,383 INFO supervisord started with pid 1
+2018-04-13 03:10:15,388 INFO spawned: 'gunicorn' with pid 8
+2018-04-13 03:10:15,505 WARN received SIGTERM indicating exit request
+2018-04-13 03:10:15,508 INFO waiting for gunicorn to die
+2018-04-13 03:10:15,513 INFO stopped: gunicorn (terminated by SIGTERM)
+2018-04-13 03:10:39,110 CRIT Set uid to user 0
+2018-04-13 03:10:39,139 INFO RPC interface 'supervisor' initialized
+2018-04-13 03:10:39,140 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-13 03:10:39,148 INFO supervisord started with pid 1
+2018-04-13 03:10:40,152 INFO spawned: 'gunicorn' with pid 9
+2018-04-13 03:10:41,905 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-13 03:55:51,337 WARN received SIGTERM indicating exit request
+2018-04-13 03:55:51,353 INFO waiting for gunicorn to die
+2018-04-13 03:55:51,675 INFO stopped: gunicorn (exit status 0)
+2018-04-13 03:57:58,637 CRIT Set uid to user 0
+2018-04-13 03:57:58,740 INFO RPC interface 'supervisor' initialized
+2018-04-13 03:57:58,741 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-13 03:57:58,744 INFO supervisord started with pid 1
+2018-04-13 03:57:59,748 INFO spawned: 'gunicorn' with pid 9
+2018-04-13 03:58:01,260 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 03:21:32,105 WARN received SIGTERM indicating exit request
+2018-04-14 03:21:32,133 INFO waiting for gunicorn to die
+2018-04-14 03:21:34,826 INFO stopped: gunicorn (exit status 0)
+2018-04-14 03:23:31,254 CRIT Set uid to user 0
+2018-04-14 03:23:31,293 INFO RPC interface 'supervisor' initialized
+2018-04-14 03:23:31,294 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-14 03:23:31,298 INFO supervisord started with pid 1
+2018-04-14 03:23:32,309 INFO spawned: 'gunicorn' with pid 9
+2018-04-14 03:23:33,791 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 03:23:58,854 CRIT Set uid to user 0
+2018-04-14 03:23:58,884 INFO RPC interface 'supervisor' initialized
+2018-04-14 03:23:58,885 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-14 03:23:58,890 INFO supervisord started with pid 1
+2018-04-14 03:23:59,894 INFO spawned: 'gunicorn' with pid 8
+2018-04-14 03:24:01,645 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 14:17:45,683 WARN received SIGTERM indicating exit request
+2018-04-14 14:17:45,712 INFO waiting for gunicorn to die
+2018-04-14 14:17:48,041 INFO stopped: gunicorn (exit status 0)
+2018-04-14 14:17:51,136 CRIT Set uid to user 0
+2018-04-14 14:17:51,175 INFO RPC interface 'supervisor' initialized
+2018-04-14 14:17:51,176 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-14 14:17:51,184 INFO supervisord started with pid 1
+2018-04-14 14:17:52,196 INFO spawned: 'gunicorn' with pid 9
+2018-04-14 14:17:53,729 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 15:00:04,718 WARN received SIGTERM indicating exit request
+2018-04-14 15:00:04,748 INFO waiting for gunicorn to die
+2018-04-14 15:00:06,842 INFO stopped: gunicorn (exit status 0)
+2018-04-14 15:00:33,240 CRIT Set uid to user 0
+2018-04-14 15:00:33,278 INFO RPC interface 'supervisor' initialized
+2018-04-14 15:00:33,279 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-14 15:00:33,284 INFO supervisord started with pid 1
+2018-04-14 15:00:34,290 INFO spawned: 'gunicorn' with pid 9
+2018-04-14 15:00:36,173 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 15:14:56,051 CRIT Set uid to user 0
+2018-04-14 15:14:56,097 INFO RPC interface 'supervisor' initialized
+2018-04-14 15:14:56,098 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-14 15:14:56,102 INFO supervisord started with pid 1
+2018-04-14 15:14:57,172 INFO spawned: 'gunicorn' with pid 9
+2018-04-14 15:14:58,922 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:45:29,419 WARN received SIGTERM indicating exit request
+2018-04-14 20:45:29,480 INFO waiting for gunicorn to die
+2018-04-14 20:45:31,085 INFO stopped: gunicorn (exit status 0)
+2018-04-14 20:45:49,097 CRIT Set uid to user 0
+2018-04-14 20:45:49,148 INFO RPC interface 'supervisor' initialized
+2018-04-14 20:45:49,149 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-14 20:45:49,153 INFO supervisord started with pid 1
+2018-04-14 20:45:50,158 INFO spawned: 'gunicorn' with pid 8
+2018-04-14 20:45:51,166 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:45:53,628 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:45:54,633 INFO spawned: 'gunicorn' with pid 14
+2018-04-14 20:45:56,231 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:45:56,763 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:45:57,769 INFO spawned: 'gunicorn' with pid 20
+2018-04-14 20:45:59,347 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:45:59,949 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:46:00,956 INFO spawned: 'gunicorn' with pid 26
+2018-04-14 20:46:02,177 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:46:02,518 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:46:03,523 INFO spawned: 'gunicorn' with pid 32
+2018-04-14 20:46:04,782 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:46:05,170 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:46:06,176 INFO spawned: 'gunicorn' with pid 38
+2018-04-14 20:46:07,205 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:46:07,428 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:46:08,432 INFO spawned: 'gunicorn' with pid 44
+2018-04-14 20:46:09,594 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:46:09,942 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:46:10,951 INFO spawned: 'gunicorn' with pid 50
+2018-04-14 20:46:12,287 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:47:33,227 WARN received SIGTERM indicating exit request
+2018-04-14 20:47:33,229 INFO waiting for gunicorn to die
+2018-04-14 20:47:33,468 INFO stopped: gunicorn (exit status 0)
+2018-04-14 20:47:49,313 CRIT Set uid to user 0
+2018-04-14 20:47:49,354 INFO RPC interface 'supervisor' initialized
+2018-04-14 20:47:49,356 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-14 20:47:49,362 INFO supervisord started with pid 1
+2018-04-14 20:47:50,371 INFO spawned: 'gunicorn' with pid 9
+2018-04-14 20:47:51,944 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:47:52,315 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:47:53,319 INFO spawned: 'gunicorn' with pid 15
+2018-04-14 20:47:54,622 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:47:54,973 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:47:55,979 INFO spawned: 'gunicorn' with pid 21
+2018-04-14 20:47:57,325 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:47:57,653 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:47:58,658 INFO spawned: 'gunicorn' with pid 27
+2018-04-14 20:47:59,845 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:48:00,161 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:48:01,168 INFO spawned: 'gunicorn' with pid 33
+2018-04-14 20:48:02,315 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:48:02,844 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:48:03,848 INFO spawned: 'gunicorn' with pid 39
+2018-04-14 20:48:04,911 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:48:04,952 INFO exited: gunicorn (exit status 3; not expected)
+2018-04-14 20:48:05,957 INFO spawned: 'gunicorn' with pid 45
+2018-04-14 20:48:07,425 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-14 20:48:13,752 WARN received SIGTERM indicating exit request
+2018-04-14 20:48:13,755 INFO waiting for gunicorn to die
+2018-04-14 20:48:13,998 INFO stopped: gunicorn (exit status 0)
+2018-04-14 20:51:43,252 CRIT Set uid to user 0
+2018-04-14 20:51:43,278 INFO RPC interface 'supervisor' initialized
+2018-04-14 20:51:43,279 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-14 20:51:43,283 INFO supervisord started with pid 1
+2018-04-14 20:51:44,289 INFO spawned: 'gunicorn' with pid 9
+2018-04-14 20:51:45,737 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-15 03:02:31,887 WARN received SIGTERM indicating exit request
+2018-04-15 03:02:31,915 INFO waiting for gunicorn to die
+2018-04-15 03:02:33,995 INFO stopped: gunicorn (exit status 0)
+2018-04-15 03:06:57,337 CRIT Set uid to user 0
+2018-04-15 03:06:57,389 INFO RPC interface 'supervisor' initialized
+2018-04-15 03:06:57,390 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-15 03:06:57,395 INFO supervisord started with pid 1
+2018-04-15 03:06:58,398 INFO spawned: 'gunicorn' with pid 9
+2018-04-15 03:06:59,893 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-15 15:00:07,146 CRIT Set uid to user 0
+2018-04-15 15:00:07,184 INFO RPC interface 'supervisor' initialized
+2018-04-15 15:00:07,185 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-15 15:00:07,189 INFO supervisord started with pid 1
+2018-04-15 15:00:08,193 INFO spawned: 'gunicorn' with pid 9
+2018-04-15 15:00:09,755 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-20 04:21:53,404 CRIT Set uid to user 0
+2018-04-20 04:21:53,456 INFO RPC interface 'supervisor' initialized
+2018-04-20 04:21:53,458 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-20 04:21:53,469 INFO supervisord started with pid 1
+2018-04-20 04:21:54,472 INFO spawned: 'gunicorn' with pid 9
+2018-04-20 04:21:56,115 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-20 04:38:55,868 CRIT Set uid to user 0
+2018-04-20 04:38:55,909 INFO RPC interface 'supervisor' initialized
+2018-04-20 04:38:55,910 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-20 04:38:55,914 INFO supervisord started with pid 1
+2018-04-20 04:38:56,918 INFO spawned: 'gunicorn' with pid 9
+2018-04-20 04:38:58,322 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-21 02:42:23,717 CRIT Set uid to user 0
+2018-04-21 02:42:23,766 INFO RPC interface 'supervisor' initialized
+2018-04-21 02:42:23,767 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-21 02:42:23,772 INFO supervisord started with pid 1
+2018-04-21 02:42:24,775 INFO spawned: 'gunicorn' with pid 9
+2018-04-21 02:42:26,641 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-21 02:57:13,497 CRIT Set uid to user 0
+2018-04-21 02:57:13,531 INFO RPC interface 'supervisor' initialized
+2018-04-21 02:57:13,531 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-21 02:57:13,537 INFO supervisord started with pid 1
+2018-04-21 02:57:14,548 INFO spawned: 'gunicorn' with pid 9
+2018-04-21 02:57:16,363 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-21 03:11:21,250 CRIT Set uid to user 0
+2018-04-21 03:11:21,294 INFO RPC interface 'supervisor' initialized
+2018-04-21 03:11:21,295 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-21 03:11:21,302 INFO supervisord started with pid 1
+2018-04-21 03:11:22,306 INFO spawned: 'gunicorn' with pid 8
+2018-04-21 03:11:23,908 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-22 02:20:09,413 CRIT Set uid to user 0
+2018-04-22 02:20:09,462 INFO RPC interface 'supervisor' initialized
+2018-04-22 02:20:09,466 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-22 02:20:09,474 INFO supervisord started with pid 1
+2018-04-22 02:20:10,484 INFO spawned: 'gunicorn' with pid 9
+2018-04-22 02:20:12,331 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-25 04:13:44,055 CRIT Set uid to user 0
+2018-04-25 04:13:44,120 INFO RPC interface 'supervisor' initialized
+2018-04-25 04:13:44,121 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-25 04:13:44,125 INFO supervisord started with pid 1
+2018-04-25 04:13:45,129 INFO spawned: 'gunicorn' with pid 9
+2018-04-25 04:13:46,571 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-27 13:22:24,052 CRIT Set uid to user 0
+2018-04-27 13:22:24,082 INFO RPC interface 'supervisor' initialized
+2018-04-27 13:22:24,083 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-27 13:22:24,088 INFO supervisord started with pid 1
+2018-04-27 13:22:25,097 INFO spawned: 'gunicorn' with pid 9
+2018-04-27 13:22:26,722 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-28 05:34:08,713 WARN received SIGTERM indicating exit request
+2018-04-28 05:34:08,741 INFO waiting for gunicorn to die
+2018-04-28 05:34:10,352 INFO stopped: gunicorn (exit status 0)
+2018-04-28 05:34:31,579 CRIT Set uid to user 0
+2018-04-28 05:34:31,618 INFO RPC interface 'supervisor' initialized
+2018-04-28 05:34:31,619 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-28 05:34:31,622 INFO supervisord started with pid 1
+2018-04-28 05:34:32,631 INFO spawned: 'gunicorn' with pid 8
+2018-04-28 05:34:34,194 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-28 05:34:45,018 WARN received SIGTERM indicating exit request
+2018-04-28 05:34:45,019 INFO waiting for gunicorn to die
+2018-04-28 05:34:45,401 INFO stopped: gunicorn (exit status 0)
+2018-04-28 05:35:11,418 CRIT Set uid to user 0
+2018-04-28 05:35:11,441 INFO RPC interface 'supervisor' initialized
+2018-04-28 05:35:11,442 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-28 05:35:11,447 INFO supervisord started with pid 1
+2018-04-28 05:35:12,452 INFO spawned: 'gunicorn' with pid 9
+2018-04-28 05:35:13,963 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-28 18:08:41,948 WARN received SIGTERM indicating exit request
+2018-04-28 18:08:41,971 INFO waiting for gunicorn to die
+2018-04-28 18:08:43,542 INFO stopped: gunicorn (exit status 0)
+2018-04-28 18:09:00,632 CRIT Set uid to user 0
+2018-04-28 18:09:00,670 INFO RPC interface 'supervisor' initialized
+2018-04-28 18:09:00,671 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-28 18:09:00,675 INFO supervisord started with pid 1
+2018-04-28 18:09:01,694 INFO spawned: 'gunicorn' with pid 8
+2018-04-28 18:09:03,588 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-28 18:16:53,483 WARN received SIGTERM indicating exit request
+2018-04-28 18:16:53,523 INFO waiting for gunicorn to die
+2018-04-28 18:16:56,264 INFO stopped: gunicorn (exit status 0)
+2018-04-28 18:17:14,909 CRIT Set uid to user 0
+2018-04-28 18:17:14,955 INFO RPC interface 'supervisor' initialized
+2018-04-28 18:17:14,956 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-28 18:17:14,961 INFO supervisord started with pid 1
+2018-04-28 18:17:15,966 INFO spawned: 'gunicorn' with pid 10
+2018-04-28 18:17:17,773 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-28 18:45:36,908 WARN received SIGTERM indicating exit request
+2018-04-28 18:45:36,927 INFO waiting for gunicorn to die
+2018-04-28 18:45:38,427 INFO stopped: gunicorn (exit status 0)
+2018-04-28 18:46:00,493 CRIT Set uid to user 0
+2018-04-28 18:46:00,542 INFO RPC interface 'supervisor' initialized
+2018-04-28 18:46:00,543 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-28 18:46:00,550 INFO supervisord started with pid 1
+2018-04-28 18:46:01,554 INFO spawned: 'gunicorn' with pid 9
+2018-04-28 18:46:02,558 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-29 04:35:34,606 WARN received SIGTERM indicating exit request
+2018-04-29 04:35:34,635 INFO waiting for gunicorn to die
+2018-04-29 04:35:36,215 INFO stopped: gunicorn (exit status 0)
+2018-04-29 04:36:29,796 CRIT Set uid to user 0
+2018-04-29 04:36:29,848 INFO RPC interface 'supervisor' initialized
+2018-04-29 04:36:29,850 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-29 04:36:29,855 INFO supervisord started with pid 1
+2018-04-29 04:36:30,860 INFO spawned: 'gunicorn' with pid 9
+2018-04-29 04:36:32,381 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-29 06:35:33,733 WARN received SIGTERM indicating exit request
+2018-04-29 06:35:33,755 INFO waiting for gunicorn to die
+2018-04-29 06:35:35,196 INFO stopped: gunicorn (exit status 0)
+2018-04-29 06:35:48,583 CRIT Set uid to user 0
+2018-04-29 06:35:48,650 INFO RPC interface 'supervisor' initialized
+2018-04-29 06:35:48,651 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-29 06:35:48,656 INFO supervisord started with pid 1
+2018-04-29 06:35:49,660 INFO spawned: 'gunicorn' with pid 9
+2018-04-29 06:35:51,085 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-29 07:04:54,467 CRIT Set uid to user 0
+2018-04-29 07:04:54,808 INFO RPC interface 'supervisor' initialized
+2018-04-29 07:04:54,808 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-29 07:04:54,812 INFO supervisord started with pid 1
+2018-04-29 07:04:55,822 INFO spawned: 'gunicorn' with pid 9
+2018-04-29 07:04:57,409 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-29 07:06:13,600 WARN received SIGTERM indicating exit request
+2018-04-29 07:06:13,602 INFO waiting for gunicorn to die
+2018-04-29 07:06:13,839 INFO stopped: gunicorn (exit status 0)
+2018-04-29 07:06:26,970 CRIT Set uid to user 0
+2018-04-29 07:06:27,018 INFO RPC interface 'supervisor' initialized
+2018-04-29 07:06:27,018 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-29 07:06:27,023 INFO supervisord started with pid 1
+2018-04-29 07:06:28,027 INFO spawned: 'gunicorn' with pid 9
+2018-04-29 07:06:29,521 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-29 07:11:09,253 WARN received SIGTERM indicating exit request
+2018-04-29 07:11:09,274 INFO waiting for gunicorn to die
+2018-04-29 07:11:10,819 INFO stopped: gunicorn (exit status 0)
+2018-04-29 07:11:32,847 CRIT Set uid to user 0
+2018-04-29 07:11:32,880 INFO RPC interface 'supervisor' initialized
+2018-04-29 07:11:32,881 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-29 07:11:32,886 INFO supervisord started with pid 1
+2018-04-29 07:11:33,898 INFO spawned: 'gunicorn' with pid 9
+2018-04-29 07:11:34,901 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-29 21:20:26,633 CRIT Set uid to user 0
+2018-04-29 21:20:26,670 INFO RPC interface 'supervisor' initialized
+2018-04-29 21:20:26,671 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-29 21:20:26,676 INFO supervisord started with pid 1
+2018-04-29 21:20:27,685 INFO spawned: 'gunicorn' with pid 8
+2018-04-29 21:20:29,329 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-29 21:22:53,039 CRIT Set uid to user 0
+2018-04-29 21:22:53,074 INFO RPC interface 'supervisor' initialized
+2018-04-29 21:22:53,075 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-29 21:22:53,079 INFO supervisord started with pid 1
+2018-04-29 21:22:54,084 INFO spawned: 'gunicorn' with pid 10
+2018-04-29 21:22:55,590 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-30 01:14:43,086 CRIT Set uid to user 0
+2018-04-30 01:14:43,150 INFO RPC interface 'supervisor' initialized
+2018-04-30 01:14:43,152 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-30 01:14:43,158 INFO supervisord started with pid 1
+2018-04-30 01:14:44,162 INFO spawned: 'gunicorn' with pid 9
+2018-04-30 01:14:45,666 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-30 13:08:02,241 WARN received SIGTERM indicating exit request
+2018-04-30 13:08:02,274 INFO waiting for gunicorn to die
+2018-04-30 13:08:02,533 INFO stopped: gunicorn (exit status 0)
+2018-04-30 13:08:23,413 CRIT Set uid to user 0
+2018-04-30 13:08:23,461 INFO RPC interface 'supervisor' initialized
+2018-04-30 13:08:23,462 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-30 13:08:23,467 INFO supervisord started with pid 1
+2018-04-30 13:08:24,472 INFO spawned: 'gunicorn' with pid 8
+2018-04-30 13:08:25,477 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-04-30 14:04:55,715 WARN received SIGTERM indicating exit request
+2018-04-30 14:04:55,739 INFO waiting for gunicorn to die
+2018-04-30 14:04:57,287 INFO stopped: gunicorn (exit status 0)
+2018-04-30 14:05:12,464 CRIT Set uid to user 0
+2018-04-30 14:05:12,503 INFO RPC interface 'supervisor' initialized
+2018-04-30 14:05:12,504 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-04-30 14:05:12,508 INFO supervisord started with pid 1
+2018-04-30 14:05:13,512 INFO spawned: 'gunicorn' with pid 8
+2018-04-30 14:05:15,457 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-04 13:38:24,718 CRIT Set uid to user 0
+2018-05-04 13:38:24,761 INFO RPC interface 'supervisor' initialized
+2018-05-04 13:38:24,762 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-04 13:38:24,768 INFO supervisord started with pid 1
+2018-05-04 13:38:25,773 INFO spawned: 'gunicorn' with pid 9
+2018-05-04 13:38:27,372 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-05 02:18:42,113 CRIT Set uid to user 0
+2018-05-05 02:18:42,153 INFO RPC interface 'supervisor' initialized
+2018-05-05 02:18:42,154 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-05 02:18:42,160 INFO supervisord started with pid 1
+2018-05-05 02:18:43,164 INFO spawned: 'gunicorn' with pid 9
+2018-05-05 02:18:45,015 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-05 19:08:11,147 WARN received SIGTERM indicating exit request
+2018-05-05 19:08:11,166 INFO waiting for gunicorn to die
+2018-05-05 19:08:12,615 INFO stopped: gunicorn (exit status 0)
+2018-05-05 19:08:25,830 CRIT Set uid to user 0
+2018-05-05 19:08:25,861 INFO RPC interface 'supervisor' initialized
+2018-05-05 19:08:25,862 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-05 19:08:25,866 INFO supervisord started with pid 1
+2018-05-05 19:08:26,872 INFO spawned: 'gunicorn' with pid 9
+2018-05-05 19:08:28,820 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-05 19:34:08,106 CRIT Set uid to user 0
+2018-05-05 19:34:08,138 INFO RPC interface 'supervisor' initialized
+2018-05-05 19:34:08,139 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-05 19:34:08,143 INFO supervisord started with pid 1
+2018-05-05 19:34:09,147 INFO spawned: 'gunicorn' with pid 10
+2018-05-05 19:34:10,663 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-05 19:47:05,276 CRIT Set uid to user 0
+2018-05-05 19:47:05,605 INFO RPC interface 'supervisor' initialized
+2018-05-05 19:47:05,605 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-05 19:47:05,609 INFO supervisord started with pid 1
+2018-05-05 19:47:06,613 INFO spawned: 'gunicorn' with pid 8
+2018-05-05 19:47:08,171 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-05 19:47:41,652 WARN received SIGTERM indicating exit request
+2018-05-05 19:47:41,653 INFO waiting for gunicorn to die
+2018-05-05 19:47:41,893 INFO stopped: gunicorn (exit status 0)
+2018-05-05 19:47:51,643 CRIT Set uid to user 0
+2018-05-05 19:47:51,681 INFO RPC interface 'supervisor' initialized
+2018-05-05 19:47:51,682 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-05 19:47:51,688 INFO supervisord started with pid 1
+2018-05-05 19:47:52,693 INFO spawned: 'gunicorn' with pid 9
+2018-05-05 19:47:54,684 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-05 19:48:37,618 CRIT Set uid to user 0
+2018-05-05 19:48:37,646 INFO RPC interface 'supervisor' initialized
+2018-05-05 19:48:37,647 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-05 19:48:37,651 INFO supervisord started with pid 1
+2018-05-05 19:48:38,657 INFO spawned: 'gunicorn' with pid 9
+2018-05-05 19:48:40,109 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-05 19:54:46,741 WARN received SIGTERM indicating exit request
+2018-05-05 19:54:46,766 INFO waiting for gunicorn to die
+2018-05-05 19:54:48,208 INFO stopped: gunicorn (exit status 0)
+2018-05-05 19:55:04,210 CRIT Set uid to user 0
+2018-05-05 19:55:04,257 INFO RPC interface 'supervisor' initialized
+2018-05-05 19:55:04,258 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-05 19:55:04,263 INFO supervisord started with pid 1
+2018-05-05 19:55:05,266 INFO spawned: 'gunicorn' with pid 8
+2018-05-05 19:55:07,191 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 00:02:21,198 WARN received SIGTERM indicating exit request
+2018-05-06 00:02:21,201 INFO waiting for gunicorn to die
+2018-05-06 00:02:21,440 INFO stopped: gunicorn (exit status 0)
+2018-05-06 00:02:34,723 CRIT Set uid to user 0
+2018-05-06 00:02:34,815 INFO RPC interface 'supervisor' initialized
+2018-05-06 00:02:34,816 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 00:02:34,822 INFO supervisord started with pid 1
+2018-05-06 00:02:35,826 INFO spawned: 'gunicorn' with pid 8
+2018-05-06 00:02:37,306 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 00:05:25,923 CRIT Set uid to user 0
+2018-05-06 00:05:25,960 INFO RPC interface 'supervisor' initialized
+2018-05-06 00:05:25,961 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 00:05:25,964 INFO supervisord started with pid 1
+2018-05-06 00:05:26,968 INFO spawned: 'gunicorn' with pid 9
+2018-05-06 00:05:28,529 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 00:05:49,817 WARN received SIGTERM indicating exit request
+2018-05-06 00:05:49,819 INFO waiting for gunicorn to die
+2018-05-06 00:05:50,058 INFO stopped: gunicorn (exit status 0)
+2018-05-06 00:06:34,635 CRIT Set uid to user 0
+2018-05-06 00:06:34,664 INFO RPC interface 'supervisor' initialized
+2018-05-06 00:06:34,665 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 00:06:34,670 INFO supervisord started with pid 1
+2018-05-06 00:06:35,676 INFO spawned: 'gunicorn' with pid 9
+2018-05-06 00:06:37,276 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 02:45:15,684 WARN received SIGTERM indicating exit request
+2018-05-06 02:45:15,688 INFO waiting for gunicorn to die
+2018-05-06 02:45:15,926 INFO stopped: gunicorn (exit status 0)
+2018-05-06 02:45:32,935 CRIT Set uid to user 0
+2018-05-06 02:45:32,985 INFO RPC interface 'supervisor' initialized
+2018-05-06 02:45:32,986 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 02:45:32,991 INFO supervisord started with pid 1
+2018-05-06 02:45:33,997 INFO spawned: 'gunicorn' with pid 9
+2018-05-06 02:45:35,467 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 02:52:15,845 WARN received SIGTERM indicating exit request
+2018-05-06 02:52:15,851 INFO waiting for gunicorn to die
+2018-05-06 02:52:16,101 INFO stopped: gunicorn (exit status 0)
+2018-05-06 02:52:30,677 CRIT Set uid to user 0
+2018-05-06 02:52:30,719 INFO RPC interface 'supervisor' initialized
+2018-05-06 02:52:30,721 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 02:52:30,726 INFO supervisord started with pid 1
+2018-05-06 02:52:31,729 INFO spawned: 'gunicorn' with pid 9
+2018-05-06 02:52:33,361 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 02:55:21,883 CRIT Set uid to user 0
+2018-05-06 02:55:21,926 INFO RPC interface 'supervisor' initialized
+2018-05-06 02:55:21,927 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 02:55:21,932 INFO supervisord started with pid 1
+2018-05-06 02:55:22,936 INFO spawned: 'gunicorn' with pid 9
+2018-05-06 02:55:24,404 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 04:15:46,186 WARN received SIGTERM indicating exit request
+2018-05-06 04:15:46,187 INFO waiting for gunicorn to die
+2018-05-06 04:15:46,426 INFO stopped: gunicorn (exit status 0)
+2018-05-06 04:15:57,934 CRIT Set uid to user 0
+2018-05-06 04:15:57,967 INFO RPC interface 'supervisor' initialized
+2018-05-06 04:15:57,968 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 04:15:57,972 INFO supervisord started with pid 1
+2018-05-06 04:15:58,976 INFO spawned: 'gunicorn' with pid 9
+2018-05-06 04:16:00,726 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 04:23:36,514 WARN received SIGTERM indicating exit request
+2018-05-06 04:23:36,515 INFO waiting for gunicorn to die
+2018-05-06 04:23:36,753 INFO stopped: gunicorn (exit status 0)
+2018-05-06 04:23:51,788 CRIT Set uid to user 0
+2018-05-06 04:23:51,835 INFO RPC interface 'supervisor' initialized
+2018-05-06 04:23:51,837 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 04:23:51,847 INFO supervisord started with pid 1
+2018-05-06 04:23:52,853 INFO spawned: 'gunicorn' with pid 9
+2018-05-06 04:23:54,430 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 04:24:53,429 WARN received SIGTERM indicating exit request
+2018-05-06 04:24:53,430 INFO waiting for gunicorn to die
+2018-05-06 04:24:53,671 INFO stopped: gunicorn (exit status 0)
+2018-05-06 04:25:07,700 CRIT Set uid to user 0
+2018-05-06 04:25:07,736 INFO RPC interface 'supervisor' initialized
+2018-05-06 04:25:07,737 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 04:25:07,741 INFO supervisord started with pid 1
+2018-05-06 04:25:08,746 INFO spawned: 'gunicorn' with pid 8
+2018-05-06 04:25:10,269 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 13:16:17,348 CRIT Set uid to user 0
+2018-05-06 13:16:17,390 INFO RPC interface 'supervisor' initialized
+2018-05-06 13:16:17,391 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 13:16:17,396 INFO supervisord started with pid 1
+2018-05-06 13:16:18,401 INFO spawned: 'gunicorn' with pid 9
+2018-05-06 13:16:19,998 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 16:43:18,215 WARN received SIGTERM indicating exit request
+2018-05-06 16:43:18,236 INFO waiting for gunicorn to die
+2018-05-06 16:43:19,706 INFO stopped: gunicorn (exit status 0)
+2018-05-06 16:43:35,959 CRIT Set uid to user 0
+2018-05-06 16:43:36,010 INFO RPC interface 'supervisor' initialized
+2018-05-06 16:43:36,012 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 16:43:36,016 INFO supervisord started with pid 1
+2018-05-06 16:43:37,025 INFO spawned: 'gunicorn' with pid 8
+2018-05-06 16:43:38,824 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 19:08:49,011 WARN received SIGTERM indicating exit request
+2018-05-06 19:08:49,086 INFO waiting for gunicorn to die
+2018-05-06 19:08:50,642 INFO stopped: gunicorn (exit status 0)
+2018-05-06 19:13:56,269 CRIT Set uid to user 0
+2018-05-06 19:13:56,311 INFO RPC interface 'supervisor' initialized
+2018-05-06 19:13:56,312 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 19:13:56,317 INFO supervisord started with pid 1
+2018-05-06 19:13:57,331 INFO spawned: 'gunicorn' with pid 9
+2018-05-06 19:13:58,335 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 20:12:50,463 WARN received SIGTERM indicating exit request
+2018-05-06 20:12:50,482 INFO waiting for gunicorn to die
+2018-05-06 20:12:52,047 INFO stopped: gunicorn (exit status 0)
+2018-05-06 20:13:06,674 CRIT Set uid to user 0
+2018-05-06 20:13:06,726 INFO RPC interface 'supervisor' initialized
+2018-05-06 20:13:06,727 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 20:13:06,738 INFO supervisord started with pid 1
+2018-05-06 20:13:07,743 INFO spawned: 'gunicorn' with pid 9
+2018-05-06 20:13:09,203 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 21:16:01,316 WARN received SIGTERM indicating exit request
+2018-05-06 21:16:01,333 INFO waiting for gunicorn to die
+2018-05-06 21:16:02,884 INFO stopped: gunicorn (exit status 0)
+2018-05-06 21:16:16,595 CRIT Set uid to user 0
+2018-05-06 21:16:16,632 INFO RPC interface 'supervisor' initialized
+2018-05-06 21:16:16,633 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 21:16:16,638 INFO supervisord started with pid 1
+2018-05-06 21:16:17,664 INFO spawned: 'gunicorn' with pid 8
+2018-05-06 21:16:19,273 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-06 21:58:01,826 CRIT Set uid to user 0
+2018-05-06 21:58:01,865 INFO RPC interface 'supervisor' initialized
+2018-05-06 21:58:01,866 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-06 21:58:01,872 INFO supervisord started with pid 1
+2018-05-06 21:58:02,876 INFO spawned: 'gunicorn' with pid 8
+2018-05-06 21:58:04,445 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-07 01:04:35,999 WARN received SIGTERM indicating exit request
+2018-05-07 01:04:36,000 INFO waiting for gunicorn to die
+2018-05-07 01:04:36,243 INFO stopped: gunicorn (exit status 0)
+2018-05-07 01:04:50,566 CRIT Set uid to user 0
+2018-05-07 01:04:50,597 INFO RPC interface 'supervisor' initialized
+2018-05-07 01:04:50,598 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-07 01:04:50,602 INFO supervisord started with pid 1
+2018-05-07 01:04:51,609 INFO spawned: 'gunicorn' with pid 9
+2018-05-07 01:04:52,616 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-07 01:35:33,127 WARN received SIGTERM indicating exit request
+2018-05-07 01:35:33,129 INFO waiting for gunicorn to die
+2018-05-07 01:35:33,370 INFO stopped: gunicorn (exit status 0)
+2018-05-07 01:35:48,552 CRIT Set uid to user 0
+2018-05-07 01:35:48,611 INFO RPC interface 'supervisor' initialized
+2018-05-07 01:35:48,616 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-07 01:35:48,625 INFO supervisord started with pid 1
+2018-05-07 01:35:49,631 INFO spawned: 'gunicorn' with pid 9
+2018-05-07 01:35:51,136 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-07 02:01:22,939 WARN received SIGTERM indicating exit request
+2018-05-07 02:01:22,965 INFO waiting for gunicorn to die
+2018-05-07 02:01:24,415 INFO stopped: gunicorn (exit status 0)
+2018-05-07 02:01:39,775 CRIT Set uid to user 0
+2018-05-07 02:01:39,812 INFO RPC interface 'supervisor' initialized
+2018-05-07 02:01:39,813 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-07 02:01:39,819 INFO supervisord started with pid 1
+2018-05-07 02:01:40,829 INFO spawned: 'gunicorn' with pid 9
+2018-05-07 02:01:41,821 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-09 03:42:10,013 CRIT Set uid to user 0
+2018-05-09 03:42:10,050 INFO RPC interface 'supervisor' initialized
+2018-05-09 03:42:10,051 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-09 03:42:10,057 INFO supervisord started with pid 1
+2018-05-09 03:42:11,061 INFO spawned: 'gunicorn' with pid 9
+2018-05-09 03:42:12,645 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-09 13:38:16,122 WARN received SIGTERM indicating exit request
+2018-05-09 13:38:16,145 INFO waiting for gunicorn to die
+2018-05-09 13:38:17,206 INFO stopped: gunicorn (exit status 0)
+2018-05-09 13:38:40,385 CRIT Set uid to user 0
+2018-05-09 13:38:40,428 INFO RPC interface 'supervisor' initialized
+2018-05-09 13:38:40,429 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-09 13:38:40,434 INFO supervisord started with pid 1
+2018-05-09 13:38:41,442 INFO spawned: 'gunicorn' with pid 8
+2018-05-09 13:38:43,063 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-10 01:36:12,306 WARN received SIGTERM indicating exit request
+2018-05-10 01:36:12,325 INFO waiting for gunicorn to die
+2018-05-10 01:36:13,881 INFO stopped: gunicorn (exit status 0)
+2018-05-10 01:36:33,811 CRIT Set uid to user 0
+2018-05-10 01:36:33,840 INFO RPC interface 'supervisor' initialized
+2018-05-10 01:36:33,841 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-10 01:36:33,845 INFO supervisord started with pid 1
+2018-05-10 01:36:34,849 INFO spawned: 'gunicorn' with pid 9
+2018-05-10 01:36:36,370 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-10 02:59:43,035 CRIT Set uid to user 0
+2018-05-10 02:59:43,084 INFO RPC interface 'supervisor' initialized
+2018-05-10 02:59:43,086 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-10 02:59:43,091 INFO supervisord started with pid 1
+2018-05-10 02:59:44,095 INFO spawned: 'gunicorn' with pid 9
+2018-05-10 02:59:45,909 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-13 03:50:04,160 CRIT Set uid to user 0
+2018-05-13 03:50:04,206 INFO RPC interface 'supervisor' initialized
+2018-05-13 03:50:04,207 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-13 03:50:04,212 INFO supervisord started with pid 1
+2018-05-13 03:50:05,411 INFO spawned: 'gunicorn' with pid 8
+2018-05-13 03:50:06,922 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-16 13:47:14,315 CRIT Set uid to user 0
+2018-05-16 13:47:14,373 INFO RPC interface 'supervisor' initialized
+2018-05-16 13:47:14,374 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-16 13:47:14,380 INFO supervisord started with pid 1
+2018-05-16 13:47:15,392 INFO spawned: 'gunicorn' with pid 8
+2018-05-16 13:47:17,145 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-16 13:57:16,276 CRIT Set uid to user 0
+2018-05-16 13:57:16,348 INFO RPC interface 'supervisor' initialized
+2018-05-16 13:57:16,349 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-16 13:57:16,356 INFO supervisord started with pid 1
+2018-05-16 13:57:17,361 INFO spawned: 'gunicorn' with pid 8
+2018-05-16 13:57:19,017 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-17 03:26:14,346 WARN received SIGTERM indicating exit request
+2018-05-17 03:26:14,368 INFO waiting for gunicorn to die
+2018-05-17 03:26:15,948 INFO stopped: gunicorn (exit status 0)
+2018-05-17 03:27:13,458 CRIT Set uid to user 0
+2018-05-17 03:27:13,482 INFO RPC interface 'supervisor' initialized
+2018-05-17 03:27:13,483 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-17 03:27:13,486 INFO supervisord started with pid 1
+2018-05-17 03:27:14,495 INFO spawned: 'gunicorn' with pid 9
+2018-05-17 03:27:16,186 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-17 13:54:06,189 WARN received SIGTERM indicating exit request
+2018-05-17 13:54:06,214 INFO waiting for gunicorn to die
+2018-05-17 13:54:07,680 INFO stopped: gunicorn (exit status 0)
+2018-05-17 13:54:21,790 CRIT Set uid to user 0
+2018-05-17 13:54:21,839 INFO RPC interface 'supervisor' initialized
+2018-05-17 13:54:21,841 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-17 13:54:21,848 INFO supervisord started with pid 1
+2018-05-17 13:54:22,858 INFO spawned: 'gunicorn' with pid 9
+2018-05-17 13:54:24,644 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-20 22:29:17,344 CRIT Set uid to user 0
+2018-05-20 22:29:17,374 INFO RPC interface 'supervisor' initialized
+2018-05-20 22:29:17,375 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-20 22:29:17,380 INFO supervisord started with pid 1
+2018-05-20 22:29:18,399 INFO spawned: 'gunicorn' with pid 9
+2018-05-20 22:29:20,247 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-20 22:43:10,028 CRIT Set uid to user 0
+2018-05-20 22:43:10,065 INFO RPC interface 'supervisor' initialized
+2018-05-20 22:43:10,065 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-20 22:43:10,070 INFO supervisord started with pid 1
+2018-05-20 22:43:11,073 INFO spawned: 'gunicorn' with pid 9
+2018-05-20 22:43:12,573 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-05-20 22:57:34,779 CRIT Set uid to user 0
+2018-05-20 22:57:34,809 INFO RPC interface 'supervisor' initialized
+2018-05-20 22:57:34,810 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2018-05-20 22:57:34,814 INFO supervisord started with pid 1
+2018-05-20 22:57:35,819 INFO spawned: 'gunicorn' with pid 8
+2018-05-20 22:57:37,413 INFO success: gunicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)

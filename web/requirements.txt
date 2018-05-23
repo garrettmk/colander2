@@ -1,0 +1,20 @@
+gunicorn
+elasticsearch
+flask
+flask-wtf
+flask-login
+flask-sqlalchemy
+flask-migrate
+flask-markdown
+flask-moment
+psycopg2-binary
+redis
+dramatiq[redis, watch]
+requests
+lxml
+fuzzywuzzy
+python-Levenshtein
+pytest
+scrapy
+html2text
+apscheduler

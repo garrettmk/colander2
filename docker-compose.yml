@@ -1,0 +1,81 @@
+version: '3'
+services:
+
+  redis:
+    hostname: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  database:
+    image: postgres
+    restart: always
+    volumes:
+      - ./database/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_DB=colander2
+      - POSTGRES_PASSWORD=passwd
+    ports:
+      - "5432:5432"
+
+  search:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.3
+    hostname: search
+    ports:
+      - "9200:9200"
+
+  web:
+    build:
+      context: web
+      dockerfile: Dockerfile.web
+    volumes:
+      - ./web:/web
+    environment:
+      - PORT=5000
+      - FLASK_DEBUG=1
+    ports:
+      - "5000:5000"
+      - "5555:5555"
+    depends_on:
+      - redis
+      - database
+      - search
+    env_file:
+      - ./web/.env
+
+#  workers:
+#    build:
+#      context: web
+#      dockerfile: Dockerfile.worker
+#    volumes:
+#      - ./web:/web
+#    depends_on:
+#      - redis
+#      - database
+#      - web
+#    env_file:
+#      - web/.env
+#
+#  spiders:
+#    build:
+#      context: spiders
+#      dockerfile: Dockerfile.spiders
+#    volumes:
+#      - ./spiders:/spiders
+#    hostname: spiders
+#    depends_on:
+#      - redis
+#      - database
+#      - web
+#    links:
+#      - redis
+#      - database
+#    environment:
+#      - SPIDERS_MAX_ITEMS=0
+#      - DOWNLOAD_DELAY=3
+#    env_file:
+#      - ./web/.env
+#    ports:
+#      - "6800:6800"
+#
+#
