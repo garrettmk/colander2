@@ -129,10 +129,14 @@ class ColanderSearch:
     def search(self, query, **kwargs):
         """Get a list of models that match the query."""
         query = {
-            'multi_match': {
-                'query': query,
-                'fields': ['*']
-            }
+            'must': [
+                {
+                    'multi_match': {
+                        'query': query,
+                        'fields': ['*']
+                    }
+                }
+            ]
         }
 
         return self._search(query, **kwargs)

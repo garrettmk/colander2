@@ -55,27 +55,3 @@ services:
 #      - web
 #    env_file:
 #      - web/.env
-#
-#  spiders:
-#    build:
-#      context: spiders
-#      dockerfile: Dockerfile.spiders
-#    volumes:
-#      - ./spiders:/spiders
-#    hostname: spiders
-#    depends_on:
-#      - redis
-#      - database
-#      - web
-#    links:
-#      - redis
-#      - database
-#    environment:
-#      - SPIDERS_MAX_ITEMS=0
-#      - DOWNLOAD_DELAY=3
-#    env_file:
-#      - ./web/.env
-#    ports:
-#      - "6800:6800"
-#
-#

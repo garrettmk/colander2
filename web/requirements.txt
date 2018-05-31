@@ -7,6 +7,7 @@ flask-sqlalchemy
 flask-migrate
 flask-markdown
 flask-moment
+flask-restful
 psycopg2-binary
 redis
 dramatiq[redis, watch]
@@ -18,3 +19,4 @@ pytest
 scrapy
 html2text
 apscheduler
+webargs

@@ -1,5 +1,6 @@
 import collections
 import decimal
+import datetime
 
 from app import db
 from sqlalchemy.ext.declarative import declared_attr
@@ -60,12 +61,32 @@ class UpdateMixin:
         else:
             self.extra = extra
 
-    def as_dict(self):
-        """Returns a representation of the model as a Python dictionary."""
-        columns = list(c.name for c in type(self).__mapper__.columns)
-        doc = {col: getattr(self, col) for col in columns}
+    def encode_attribute(self, attr):
+        """Return a JSON-compatible representation of a given object."""
+        value = getattr(self, attr)
 
+        if isinstance(value, (datetime.datetime, datetime.date)):
+            return value.timestamp()
+
+        return value
+
+    def as_json(self, *args):
+        """Returns a representation of the model as a Python dictionary."""
+        if not args:
+            args = list(c.name for c in type(self).__mapper__.columns)
+            args += getattr(self, '__extended__', [])
+
+        doc = {attr: self.encode_attribute(attr) for attr in args}
         return doc
+
+    def abbr_json(self):
+        """Returns an abbreviated form of the model as a Python dictionary."""
+        try:
+            abbr_attrs = self.__abbreviated__
+        except AttributeError:
+            abbr_attrs = []
+
+        return self.as_json(*abbr_attrs)
 
 
 ########################################################################################################################
@@ -135,7 +156,7 @@ SearchMixin.register_hooks()
 ########################################################################################################################
 
 
-class User(db.Model):
+class User(db.Model, UpdateMixin, SearchMixin):
     """Tracks user name, email and password."""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), nullable=False, unique=True)

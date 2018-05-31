@@ -1,13 +1,13 @@
 from datetime import datetime
 
 from app import db
-from .core import PolymorphicBase, UpdateMixin, CURRENCY
+from .core import PolymorphicBase, UpdateMixin, SearchMixin, CURRENCY
 
 
 ########################################################################################################################
 
 
-class FinancialAccount(db.Model, UpdateMixin):
+class FinancialAccount(db.Model, UpdateMixin, SearchMixin):
     """A collection of FinancialEvenets."""
     id = db.Column(db.Integer, primary_key=True)
     owner_id = db.Column(db.Integer, db.ForeignKey('entity.id', ondelete='CASCADE'), nullable=False)
@@ -15,6 +15,8 @@ class FinancialAccount(db.Model, UpdateMixin):
 
     owner = db.relationship('Entity', back_populates='accounts')
     events = db.relationship('FinancialEvent', back_populates='account', passive_deletes=True)
+
+    __search_fields__ = ['name']
 
     def __repr__(self):
         owner_name = self.owner.name if self.owner else None
@@ -28,7 +30,7 @@ class FinancialAccount(db.Model, UpdateMixin):
 ########################################################################################################################
 
 
-class FinancialEvent(db.Model, PolymorphicBase, UpdateMixin):
+class FinancialEvent(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
     """Represents a financial event, like a debit or credit."""
     id = db.Column(db.Integer, primary_key=True)
     account_id = db.Column(db.Integer, db.ForeignKey('financial_account.id', ondelete='CASCADE'), nullable=False)
@@ -40,6 +42,8 @@ class FinancialEvent(db.Model, PolymorphicBase, UpdateMixin):
 
     account = db.relationship('FinancialAccount', back_populates='events')
     originator = db.relationship('Entity', back_populates='financials')
+
+    __search_fields__ = ['description']
 
     def __repr__(self):
         return f'<{type(self).__name__} {self.net} {self.description}>'

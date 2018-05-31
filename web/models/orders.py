@@ -7,7 +7,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import UniqueConstraint
 
 from app import db
-from .core import PolymorphicBase, UpdateMixin, CURRENCY
+from .core import PolymorphicBase, UpdateMixin, SearchMixin, CURRENCY
 from .finances import OrderEvent, OrderItemEvent, InventoryAdjustment
 
 
@@ -46,7 +46,7 @@ def inventory_property(name, default=None):
 ########################################################################################################################
 
 
-class Order(db.Model, PolymorphicBase, UpdateMixin):
+class Order(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
     """Represents a transfer of inventory from one entity to another."""
     id = db.Column(db.Integer, primary_key=True)
     source_id = db.Column(db.Integer, db.ForeignKey('entity.id', ondelete='RESTRICT'), nullable=False)
@@ -67,6 +67,8 @@ class Order(db.Model, PolymorphicBase, UpdateMixin):
     items = db.relationship('OrderItem', back_populates='order', passive_deletes=True)
     shipments = db.relationship('Shipment', back_populates='order')
     financials = db.relationship('OrderEvent', back_populates='order')
+
+    __search_fields__ = ['order_number']
 
     def __repr__(self):
         src_name = self.source.name if self.source else None
@@ -104,7 +106,7 @@ class Order(db.Model, PolymorphicBase, UpdateMixin):
 ########################################################################################################################
 
 
-class OrderItem(db.Model, PolymorphicBase, UpdateMixin):
+class OrderItem(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
     """A single SKU in an order."""
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete='CASCADE'), nullable=False)
@@ -191,7 +193,7 @@ class OrderItem(db.Model, PolymorphicBase, UpdateMixin):
 ########################################################################################################################
 
 
-class Shipment(db.Model, PolymorphicBase, UpdateMixin):
+class Shipment(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
     """An shipment of products."""
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete='CASCADE'), nullable=False)
@@ -204,6 +206,8 @@ class Shipment(db.Model, PolymorphicBase, UpdateMixin):
 
     order = db.relationship('Order', back_populates='shipments')
     items = db.relationship('OrderItem', back_populates='shipment')
+
+    __search_fields__ = ['carrier', 'tracking_number', 'status']
 
 
 ########################################################################################################################

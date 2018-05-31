@@ -151,7 +151,7 @@ class Listing(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
 
     __table_args__ = (UniqueConstraint('vendor_id', 'sku'),)
     __search_fields__ = ['sku', 'title', 'brand', 'model', 'features', 'description']
-    __search_index__ = 'listings'
+    __abbreviated__ = ['id', 'vendor_id', 'sku', 'title']
 
     # Pass-through properties
     price = detail_property('price')
