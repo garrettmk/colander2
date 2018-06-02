@@ -37,22 +37,19 @@ class Tasks(Resource):
     method_decorators = [format_response]
 
     start_args = {
-        'task': fields.Str(required=True),
+        'module': fields.Str(required=True),
+        'action': fields.Str(required=True),
         'args': fields.List(fields.Raw(), missing=lambda: []),
         'kwargs': fields.Dict(missing=lambda: {}),
         'options': fields.Dict(missing=lambda: {})
     }
 
     @use_kwargs(start_args)
-    def post(self, task, args, kwargs, options):
+    def post(self, module, action, args, kwargs, options):
         """Start a task using the POST data."""
 
-        path = task.split('.')
-        module = '.'.join(path[:-1])
-        actor = path[-1]
-
-        module = importlib.import_module(module)
-        actor = getattr(module, actor)
+        module = importlib.import_module('ext.' + module)
+        actor = getattr(module, action)
 
         message = actor.send_with_options(args=args, kwargs=kwargs, **options)
 

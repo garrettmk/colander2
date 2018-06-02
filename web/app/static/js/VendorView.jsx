@@ -1,7 +1,7 @@
 import React from "react";
 import VendorDetails from "./VendorDetails";
 import ListingsList from "./ListingsList";
-import ArgumentsEditor from "./ArgumentsEditor";
+import ExtensionAction from "./ExtensionAction";
 
 
 export default class VendorView extends React.Component {
@@ -21,6 +21,7 @@ export default class VendorView extends React.Component {
         };
 
         this.fetchVendor = this.fetchVendor.bind(this);
+        this.sendExtAction = this.sendExtAction.bind(this);
     }
 
     fetchVendor () {
@@ -47,6 +48,23 @@ export default class VendorView extends React.Component {
             alert(error);
         })
     }
+
+    sendExtAction (data) {
+        fetch('/api/tasks', {
+            body: JSON.stringify(data),
+            headers: {
+              'content-type': 'application/json'
+            },
+            method: 'POST'
+        }).then(response => {
+            if (response.ok)
+                return response.json();
+            throw new Error('Failed')
+        }).then(results => {
+            console.log(results)
+        })
+    }
+
     componentDidMount () {
         this.fetchVendor(this.props.match.params.vendorId)
     }
@@ -60,16 +78,26 @@ export default class VendorView extends React.Component {
         return (
             <div>
                 <h2>Vendor View</h2>
-                <ArgumentsEditor/>
-                <VendorDetails
-                    loading={this.state.loading}
-                    vendor={this.state.vendor}
-                />
-                <ListingsList
-                    loading={this.state.loading}
-                    total={this.state.vendor.listings.total}
-                    listings={this.state.vendor.listings.listings}
-                />
+                {this.state.loading
+                    ? <span>Loading...</span>
+                    : <div>
+                        <VendorDetails
+                            loading={this.state.loading}
+                            vendor={this.state.vendor}
+                        />
+                        <ExtensionAction
+                            name={this.state.vendor.ext_module}
+                            module={this.state.vendor.ext_module}
+                            actions={this.state.vendor.extension}
+                            onSubmit={this.sendExtAction}
+                        />
+                        <ListingsList
+                            loading={this.state.loading}
+                            total={this.state.vendor.listings.total}
+                            listings={this.state.vendor.listings.listings}
+                        />
+                    </div>
+                }
             </div>
         )
     }
