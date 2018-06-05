@@ -15,6 +15,7 @@ class Objects(Resource):
     unaliased = {
         'vendor': Vendor,
         'listing': Listing,
+        'inventory': Inventory,
         'order': Order,
     }
 

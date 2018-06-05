@@ -11,6 +11,8 @@ export default function ListingsList (props) {
             SKU: 'sku',
             Title: 'title'
         },
+        linkOnAttr: 'title',
+        linkPrefix: '/listings/',
         loading: props.loading,
         total: props.total,
         objects: props.listings

@@ -16,9 +16,10 @@ export default class ExtensionAction extends React.Component {
 
         this.state = {
             module: props.module,
-            action: '',
+            action: props.actions ? props.actions[0] : '',
             args: [],
-            kwargs: {}
+            kwargs: {},
+            status: undefined
         }
     }
 
@@ -42,7 +43,6 @@ export default class ExtensionAction extends React.Component {
     }
 
     handleSubmit () {
-        console.log(this.state)
         if (this.props.onSubmit)
             this.props.onSubmit(this.state)
     }
@@ -53,9 +53,9 @@ export default class ExtensionAction extends React.Component {
 
     render () {
         return (
-            <div>
+            <div className={"outlined"}>
                 <h4>Extension: {this.props.name}</h4>
-                <table style={{ borderStyle: 'solid', borderWidth: '5px'}}>
+                <table>
                     <tbody>
                         <tr>
                             <td>
@@ -93,7 +93,6 @@ export default class ExtensionAction extends React.Component {
                         </tr>
                     </tbody>
                 </table>
-                {JSON.stringify(this.state)}
             </div>
         )
     }

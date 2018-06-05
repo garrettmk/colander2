@@ -3,9 +3,9 @@ import { Route, Link } from "react-router-dom";
 import DashboardView from "./DashboardView";
 import SearchView from "./SearchView";
 import VendorView from "./VendorView";
+import ListingView from "./ListingView";
 import SearchBox from "./SearchBox";
 import queryString from "query-string";
-import ExtensionAction from "./ExtensionAction";
 
 
 class App extends React.Component {
@@ -28,7 +28,7 @@ class App extends React.Component {
                 <Route exact path={'/'} component={DashboardView}/>
                 <Route path={'/search'} component={SearchView}/>
                 <Route path={'/vendors/:vendorId'} component={VendorView}/>
-                <Route path={'/ext'} component={ExtensionAction}/>
+                <Route path={'/listings/:listingId'} component={ListingView}/>
             </div>
         );
     }

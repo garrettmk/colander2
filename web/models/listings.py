@@ -152,6 +152,7 @@ class Listing(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
     __table_args__ = (UniqueConstraint('vendor_id', 'sku'),)
     __search_fields__ = ['sku', 'title', 'brand', 'model', 'features', 'description']
     __abbreviated__ = ['id', 'vendor_id', 'sku', 'title']
+    __extended__ = ['price', 'rank', 'rating']
 
     # Pass-through properties
     price = detail_property('price')
@@ -188,6 +189,9 @@ class Listing(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
     @reconstructor
     def __init_on_load__(self):
         self.suppress_guessing = False
+
+    def encode_attribute(self, attr):
+        return super().encode_attribute(attr)
 
     # Event handlers
 

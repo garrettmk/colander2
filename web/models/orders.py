@@ -239,6 +239,8 @@ class Inventory(db.Model, UpdateMixin):
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id', ondelete='CASCADE'), nullable=False)
 
     __table_args__ = (UniqueConstraint('listing_id', 'owner_id'),)
+    __abbreviated__ = ['id', 'owner_id', 'listing_id', 'active', 'fulfillable']
+    __extended__ = ['active', 'fulfillable', 'reserved', 'unsellable', 'price', 'timestamp', 'owner', 'listing']
 
     # Details
     active = inventory_property('active')
@@ -286,6 +288,13 @@ class Inventory(db.Model, UpdateMixin):
     def _ensure_owner(mapper, conn, target):
         if target.owner_id is None:
             target.owner_id = target.listing.vendor_id
+
+    def encode_attribute(self, attr):
+        if attr in ('owner', 'listing'):
+            obj = getattr(self, attr)
+            return obj.abbr_json()
+
+        return super().encode_attribute(attr)
 
     def calculate_cost(self):
         """Calculates the total cost and average cost each for this inventory."""

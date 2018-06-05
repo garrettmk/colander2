@@ -15,7 +15,7 @@ export default function ObjectList (props) {
     let linkOnAttr = props.linkOnAttr;
 
     return (
-        <div>
+        <div className={"outlined"}>
             <h3>{props.title} {props.loading ? '' : '(' + props.total + ')'}</h3>
             {props.loading
                 ? 'Loading...'

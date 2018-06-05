@@ -15,7 +15,7 @@ class Entity(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
     # Relationships
     accounts = db.relationship('FinancialAccount', back_populates='owner', lazy='dynamic')
     financials = db.relationship('FinancialEvent', back_populates='originator')
-    inventories = db.relationship('Inventory', back_populates='owner')
+    inventories = db.relationship('Inventory', back_populates='owner', lazy='dynamic')
 
     orders_from = db.relationship(
         'Order',
@@ -33,7 +33,7 @@ class Entity(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
 
     # Config
     __search_fields__ = ['name']
-    __extended__ = ['accounts', 'orders_from', 'orders_to']
+    __extended__ = ['accounts', 'orders_from', 'orders_to', 'inventories']
 
     def __repr__(self):
         return f'<{type(self).__name__} {self.name}>'
@@ -55,6 +55,12 @@ class Entity(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
             return {
                 'total': self.accounts.count(),
                 'accounts': [a.abbr_json() for a in self.accounts.limit(10).all()]
+            }
+
+        elif attr == 'inventories':
+            return {
+                'total': self.inventories.count(),
+                'inventories': [i.abbr_json() for i in self.inventories.limit(10).all()]
             }
 
         return super().encode_attribute(attr)
@@ -88,7 +94,7 @@ class Vendor(Entity):
     listings = db.relationship('Listing', back_populates='vendor', passive_deletes=True, lazy='dynamic')
 
     __search_fields__ = Entity.__search_fields__ + ['url']
-    __abbreviated__ = ['id', 'name', 'url']
+    __abbreviated__ = ['id', 'name', 'url', 'ext_module']
     __extended__ = Entity.__extended__ + ['extension', 'listings']
 
     def __init__(self, *args, **kwargs):

@@ -67,6 +67,8 @@ class UpdateMixin:
 
         if isinstance(value, (datetime.datetime, datetime.date)):
             return value.timestamp()
+        elif isinstance(value, decimal.Decimal):
+            return float(value)
 
         return value
 
