@@ -3,6 +3,7 @@ from .vendors import VendorActions
 from .search import TextSearch
 from .objects import Objects, Attributes
 from .tasks import Tasks
+from .queries import GetInventory
 
 
 ########################################################################################################################
@@ -31,3 +32,4 @@ api.add_resource(Attributes, '/obj/<type_alias>/<int:obj_id>')
 api.add_resource(VendorActions, '/obj/vendor/<int:obj_id>/<action>')
 
 api.add_resource(Tasks, '/tasks')
+api.add_resource(GetInventory, '/queries/inventory')

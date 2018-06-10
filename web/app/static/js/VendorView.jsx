@@ -1,4 +1,5 @@
 import React from "react";
+import update from "immutability-helper";
 import VendorDetails from "./VendorDetails";
 import ListingsList from "./ListingsList";
 import ExtensionAction from "./ExtensionAction";
@@ -14,7 +15,6 @@ export default class VendorView extends React.Component {
 
         this.defaultState = this.defaultState.bind(this);
         this.fetchVendor = this.fetchVendor.bind(this);
-        this.sendExtAction = this.sendExtAction.bind(this);
 
         this.state = this.defaultState();
     }
@@ -95,7 +95,7 @@ export default class VendorView extends React.Component {
             inventories: { loading: true, total: null, items: [] }
         });
 
-        fetch(`/api/obj/inventory?owner_id=${vendorId}&getAttrs=all`).then(response => {
+        fetch(`/api/obj/vendor?vendor_id=${vendorId}&getAttrs=foreign_inventories`).then(response => {
             if (response.ok)
                 return response.json();
             throw new Error('Could not fetch inventory data.')
@@ -103,8 +103,8 @@ export default class VendorView extends React.Component {
             this.setState({
                 inventories: {
                     loading: false,
-                    total: results.total,
-                    items: results.items
+                    total: results.items[0].foreign_inventories.total,
+                    items: results.items[0].foreign_inventories.inventories
                 }
             })
         }).catch(error => {
@@ -114,69 +114,35 @@ export default class VendorView extends React.Component {
         })
     }
 
-    sendExtAction (data) {
-        fetch('/api/tasks', {
-            body: JSON.stringify(data),
-            headers: {
-              'content-type': 'application/json'
-            },
-            method: 'POST'
-        }).then(response => {
-            if (response.ok)
-                return response.json();
-            throw new Error('Failed')
-        }).then(results => {
-            console.log(results)
-        })
-    }
-
-    componentDidMount () {
-        const vendorId = this.props.match.params.vendorId;
-        this.fetchVendor(vendorId);
-        this.fetchListings(vendorId);
-        this.fetchInventories(vendorId);
-    }
-
-    componentDidUpdate (prevProps, prevState) {
-        const newVendorId = this.props.match.params.vendorId;
-        const oldVendorId = prevProps.match.params.vendorId;
-        if (newVendorId !== oldVendorId) {
-            this.fetchVendor(newVendorId);
-            this.fetchListings(newVendorId);
-            this.fetchInventories(newVendorId);
-        }
-    }
+    // componentDidMount () {
+    //     const vendorId = this.props.match.params.vendorId;
+    //     this.fetchVendor(vendorId);
+    //     // this.fetchListings(vendorId);
+    //     // this.fetchInventories(vendorId);
+    // }
+    //
+    // componentDidUpdate (prevProps, prevState) {
+    //     const newVendorId = this.props.match.params.vendorId;
+    //     const oldVendorId = prevProps.match.params.vendorId;
+    //     if (newVendorId !== oldVendorId) {
+    //         this.fetchVendor(newVendorId);
+    //         // this.fetchListings(newVendorId);
+    //         // this.fetchInventories(newVendorId);
+    //     }
+    // }
 
     render () {
+        const vendorId = this.props.match.params.vendorId;
+
         return (
             <div>
                 <h2>Vendor View</h2>
                 <div>
-                    <VendorDetails
-                        loading={this.state.vendor.loading}
-                        vendor={this.state.vendor.vendor}
-                    />
-                    <ExtraDetails
-                        loading={this.state.vendor.loading}
-                        data={this.state.vendor.vendor.extra}
-                    />
-                    <ExtensionAction
-                        name={this.state.vendor.ext_module}
-                        module={this.state.vendor.ext_module}
-                        actions={this.state.vendor.extension || []}
-                        onSubmit={this.sendExtAction}
-                    />
-                    <InventoryList
-                        title={"Inventories"}
-                        loading={this.state.inventories.loading}
-                        total={this.state.inventories.total}
-                        inventories={this.state.inventories.items}
-                    />
-                    <ListingsList
-                        loading={this.state.listings.loading}
-                        total={this.state.listings.total}
-                        listings={this.state.listings.items}
-                    />
+                    <VendorDetails vendorId={vendorId}/>
+                    <ExtraDetails objType={"vendor"} objId={vendorId}/>
+                    <ExtensionAction vendorId={vendorId}/>
+                    <InventoryList ownerId={vendorId} own={true}/>
+                    {/*<ListingsList vendorId={vendorId}/>*/}
                 </div>
             </div>
         )

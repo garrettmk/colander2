@@ -14,6 +14,10 @@ export default function VendorsList (props) {
         linkPrefix: '/vendors/',
         loading: props.loading,
         total: props.total,
-        objects: props.vendors
+        objects: props.vendors,
+        page: props.page,
+        pages: props.pages,
+        onNextPage: props.onNextPage,
+        onPrevPage: props.onPrevPage
     })
 }

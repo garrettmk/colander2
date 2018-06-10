@@ -1,8 +1,10 @@
-from itertools import groupby
-from flask_restful import Resource, reqparse
+import math
 
-from app import search
-from models import User, Vendor, Customer, Listing
+from flask_restful import Resource
+from webargs import fields
+from webargs.flaskparser import use_kwargs
+
+from .common import model_types, format_response
 
 
 ########################################################################################################################
@@ -11,13 +13,6 @@ from models import User, Vendor, Customer, Listing
 class TextSearch(Resource):
     """Search the entire database using a query string."""
 
-    model_aliases = {
-        'user': User,
-        'vendor': Vendor,
-        'customer': Customer,
-        'listing': Listing
-    }
-
     default_types = [
         'user',
         'vendor',
@@ -25,36 +20,29 @@ class TextSearch(Resource):
         'listing'
     ]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    get_schema = {
+        'query': fields.Str(missing=''),
+        'types': fields.List(fields.Str(), missing=default_types),
+        'page': fields.Int(missing=1),
+        'perPage': fields.Int(missing=10)
+    }
 
-        self.parser = reqparse.RequestParser()
-        self.parser.add_argument('query', type=str)
-        self.parser.add_argument('types', action='append')
-
-    def get(self):
-        args = self.parser.parse_args()
-        query = args.get('query') or ''
-        types = args.get('types') or self.default_types
+    @use_kwargs(get_schema)
+    def get(self, query, types, page, perPage):
         response = {
             'total': 0
         }
 
-        try:
-            for type_name in types:
-                model_type = self.model_aliases[type_name]
-                results, total = model_type.search(query)
+        for type_name in types:
+            model_type = model_types[type_name]
+            results, total = model_type.search(query, page, perPage)
 
-                response['total'] += total
-                response[type_name] = {
-                    'total': total,
-                    'results': [m.abbr_json() for m in results]
-                }
-        except Exception as e:
-            return {
-                'status': 'error',
-                'exception': repr(e),
-                'message': str(e)
+            response['total'] += total
+            response[type_name] = {
+                'total': total,
+                'page': page,
+                'pages': math.ceil(total / perPage),
+                'results': [m.abbr_json() for m in results]
             }
 
         return response

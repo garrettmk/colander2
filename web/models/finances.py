@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from app import db
-from .core import PolymorphicBase, UpdateMixin, SearchMixin, CURRENCY
+from .core import PolymorphicMixin, UpdateMixin, SearchMixin, CURRENCY
 
 
 ########################################################################################################################
@@ -30,7 +30,7 @@ class FinancialAccount(db.Model, UpdateMixin, SearchMixin):
 ########################################################################################################################
 
 
-class FinancialEvent(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
+class FinancialEvent(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
     """Represents a financial event, like a debit or credit."""
     id = db.Column(db.Integer, primary_key=True)
     account_id = db.Column(db.Integer, db.ForeignKey('financial_account.id', ondelete='CASCADE'), nullable=False)
@@ -44,6 +44,7 @@ class FinancialEvent(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
     originator = db.relationship('Entity', back_populates='financials')
 
     __search_fields__ = ['description']
+
 
     def __repr__(self):
         return f'<{type(self).__name__} {self.net} {self.description}>'

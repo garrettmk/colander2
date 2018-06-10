@@ -4,7 +4,7 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app import db
-from .core import PolymorphicBase, CURRENCY
+from .core import PolymorphicMixin, CURRENCY
 from .listings import Listing, ListingDetails
 from .finances import FinancialAccount, InventoryAdjustment
 
@@ -31,7 +31,7 @@ def lcm(*args):
 ########################################################################################################################
 
 
-class Relationship(db.Model, PolymorphicBase):
+class Relationship(db.Model, PolymorphicMixin):
     """Describes a many-to-one relationship between listings."""
     id = db.Column(db.Integer, primary_key=True)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id', ondelete='CASCADE'), nullable=False)
@@ -43,7 +43,7 @@ class Relationship(db.Model, PolymorphicBase):
 ########################################################################################################################
 
 
-class RelationshipSource(db.Model, PolymorphicBase):
+class RelationshipSource(db.Model, PolymorphicMixin):
     """A listing on the 'many' side of the relationship."""
     id = db.Column(db.Integer, primary_key=True)
     relationship_id = db.Column(db.Integer, db.ForeignKey('relationship.id', ondelete='CASCADE'), nullable=False)

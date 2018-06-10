@@ -1,12 +1,13 @@
 import collections
 import decimal
 import datetime
+import importlib
 
-from app import db
-from sqlalchemy.ext.declarative import declared_attr
+from app import db, Base
+from sqlalchemy.ext.declarative import declared_attr, declarative_base
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.dialects.postgresql import JSONB
-from flask_sqlalchemy import SignallingSession
+from flask_sqlalchemy import SignallingSession, Model
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import search
 
@@ -29,9 +30,27 @@ def quantize_decimal(d, places=4):
 ########################################################################################################################
 
 
+class PolymorphicMixin:
+    """Base class for extended models."""
+    type = db.Column(db.String(64), nullable=False)
+
+    @declared_attr
+    def __mapper_args__(cls):
+        return {
+            'polymorphic_identity': cls.__name__,
+            'polymorphic_on': cls.type
+        }
+
+    def __repr__(self):
+        return f'<{type(self).__name__} {self.id}>'
+
+
+########################################################################################################################
+
+
 class UpdateMixin:
     """Provides models with an update() method, similar to dictionaries."""
-    extra = db.Column(MutableDict.as_mutable(JSONB), default={}, nullable=False)
+    extra = db.Column(MutableDict.as_mutable(JSONB), default=dict, nullable=False)
 
     def update(self, *args, **kwargs):
         """Update a model object's attributes, either by specifying their values as keyword arguments or as a
@@ -123,14 +142,6 @@ class SearchMixin:
         db.event.listen(SignallingSession, 'after_commit', cls.after_commit)
 
     @classmethod
-    def all_subclasses(cls):
-        return cls.__subclasses__() + [g for s in cls.__subclasses__() for g in s.all_subclasses()]
-
-    @classmethod
-    def full_name(cls):
-        return '.'.join((cls.__module__, cls.__name__))
-
-    @classmethod
     def search(cls, expression, page=1, per_page=10):
         hits, total = search.search(
             expression,
@@ -142,7 +153,7 @@ class SearchMixin:
         ids = [h['id'] for h in hits]
         whens = [(id, i) for i, id in enumerate(ids)]
 
-        if total > 0:
+        if hits:
             return cls.query.filter(cls.id.in_(ids)).order_by(db.case(whens, value=cls.id)), total
         else:
             return cls.query.filter_by(id=0), 0
@@ -185,16 +196,26 @@ class User(db.Model, UpdateMixin, SearchMixin):
 ########################################################################################################################
 
 
-class PolymorphicBase:
-    """Base class for extended models."""
-    type = db.Column(db.String(64), nullable=False)
+class Task(db.Model, UpdateMixin, SearchMixin):
+    """Stores info on recurring tasks."""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False, unique=True)
+    module = db.Column(db.String(64), nullable=False)
+    action = db.Column(db.String(64), nullable=False)
+    args = db.Column(JSONB, default=list)
+    kwargs = db.Column(JSONB, default=dict)
+    options = db.Column(JSONB, default=dict)
+    schedule = db.Column(JSONB, default=dict)
 
-    @declared_attr
-    def __mapper_args__(cls):
-        return {
-            'polymorphic_identity': cls.__name__,
-            'polymorphic_on': cls.type
-        }
+    __search_fields__ = ['name', 'module', 'action']
 
     def __repr__(self):
-        return f'<{type(self).__name__} {self.id}>'
+        return f'<{type(self).__name__} {self.name or self.id}>'
+
+    def send(self):
+        module = importlib.import_module('ext.' + self.module)
+        actor = getattr(module, self.action)
+
+        message = actor.send_with_options(args=self.args or [], kwargs=self.kwargs or {}, **(self.options or {}))
+
+        return {'message_id': message.message_id}

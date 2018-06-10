@@ -7,7 +7,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import UniqueConstraint
 
 from app import db
-from .core import PolymorphicBase, UpdateMixin, SearchMixin, CURRENCY
+from .core import PolymorphicMixin, UpdateMixin, SearchMixin, CURRENCY
 from .finances import OrderEvent, OrderItemEvent, InventoryAdjustment
 
 
@@ -46,7 +46,7 @@ def inventory_property(name, default=None):
 ########################################################################################################################
 
 
-class Order(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
+class Order(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
     """Represents a transfer of inventory from one entity to another."""
     id = db.Column(db.Integer, primary_key=True)
     source_id = db.Column(db.Integer, db.ForeignKey('entity.id', ondelete='RESTRICT'), nullable=False)
@@ -69,11 +69,18 @@ class Order(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
     financials = db.relationship('OrderEvent', back_populates='order')
 
     __search_fields__ = ['order_number']
+    __extended__ = ['source', 'destination']
 
     def __repr__(self):
         src_name = self.source.name if self.source else None
         dest_name = self.destination.name if self.destination else None
         return f'<{type(self).__name__} ({self.id}) {self.order_number} {src_name} -> {dest_name}>'
+
+    def encode_attribute(self, attr):
+        if attr == 'source':
+            return self.source.abbr_json()
+        elif attr == 'destination':
+            return self.destination.abbr_json()
 
     def send_inventory(self):
         for item in self.items:
@@ -106,7 +113,7 @@ class Order(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
 ########################################################################################################################
 
 
-class OrderItem(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
+class OrderItem(db.Model, PolymorphicMixin, UpdateMixin):
     """A single SKU in an order."""
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete='CASCADE'), nullable=False)
@@ -193,7 +200,7 @@ class OrderItem(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
 ########################################################################################################################
 
 
-class Shipment(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
+class Shipment(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
     """An shipment of products."""
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete='CASCADE'), nullable=False)

@@ -4,6 +4,7 @@ import DashboardView from "./DashboardView";
 import SearchView from "./SearchView";
 import VendorView from "./VendorView";
 import ListingView from "./ListingView";
+import OrderView from "./OrderView";
 import SearchBox from "./SearchBox";
 import queryString from "query-string";
 
@@ -29,6 +30,7 @@ class App extends React.Component {
                 <Route path={'/search'} component={SearchView}/>
                 <Route path={'/vendors/:vendorId'} component={VendorView}/>
                 <Route path={'/listings/:listingId'} component={ListingView}/>
+                <Route path={'/orders/:orderId'} component={OrderView}/>
             </div>
         );
     }

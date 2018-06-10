@@ -3,6 +3,7 @@ import ObjectTable from "./ObjectTable"
 
 
 export default function ListingsList (props) {
+
     return ObjectTable({
         title: 'Listings',
         fields: {
@@ -15,6 +16,10 @@ export default function ListingsList (props) {
         linkPrefix: '/listings/',
         loading: props.loading,
         total: props.total,
-        objects: props.listings
+        objects: props.listings,
+        page: props.page,
+        pages: props.pages,
+        onNextPage: props.onNextPage,
+        onPrevPage: props.onPrevPage
     })
 }

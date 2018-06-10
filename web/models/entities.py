@@ -2,12 +2,13 @@ from importlib import import_module
 from sqlalchemy.orm import reconstructor
 
 from app import db
-from .core import PolymorphicBase, UpdateMixin, SearchMixin, URL
+from .core import Base, PolymorphicMixin, UpdateMixin, SearchMixin, URL
+
 
 ########################################################################################################################
 
 
-class Entity(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
+class Entity(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
     """Represents an owner of Listings (a vendor, market, or business) or a customer."""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True)
@@ -33,7 +34,7 @@ class Entity(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
 
     # Config
     __search_fields__ = ['name']
-    __extended__ = ['accounts', 'orders_from', 'orders_to', 'inventories']
+    __extended__ = ['accounts', 'orders_from', 'orders_to', 'inventories',]
 
     def __repr__(self):
         return f'<{type(self).__name__} {self.name}>'
@@ -95,6 +96,9 @@ class Vendor(Entity):
 
     __search_fields__ = Entity.__search_fields__ + ['url']
     __abbreviated__ = ['id', 'name', 'url', 'ext_module']
+    __schema_set__ = {
+        'abbreviated': ['id', 'name', 'url', 'ext_module']
+    }
     __extended__ = Entity.__extended__ + ['extension', 'listings']
 
     def __init__(self, *args, **kwargs):

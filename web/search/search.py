@@ -23,7 +23,7 @@ class ColanderSearch:
         index_template = {
             'index_patterns': '*',
             'mappings': {
-                'model': {
+                'doc': {
                     'properties': {
                         '__model_type__': {
                             'type': 'keyword'
@@ -51,7 +51,7 @@ class ColanderSearch:
 
         self.es.index(
             index=index,
-            doc_type='model',
+            doc_type='doc',
             id=model.id,
             body=payload
         )
@@ -61,7 +61,7 @@ class ColanderSearch:
         index = index or getattr(model, '__search_index__', None) or self.default_index
         self.es.delete(
             index=index,
-            doc_type='model',
+            doc_type='doc',
             id=model.id
         )
 
@@ -77,7 +77,7 @@ class ColanderSearch:
             }
         }
 
-        self.es.delete_by_query(index=index, doc_type='model', body=body, ignore=404)
+        self.es.delete_by_query(index=index, doc_type='doc', body=body, ignore=404)
 
         for obj in cls.query.all():
             self.add_to_index(obj, index)
@@ -112,7 +112,7 @@ class ColanderSearch:
         body['size'] = per_page
         body['_source'] = ['__model_type__']
 
-        results = self.es.search(index=index, doc_type='model', body=body)
+        results = self.es.search(index=index, doc_type='doc', body=body)
         total = results['hits']['total']
         max_score = results['hits']['max_score']
         hits = [

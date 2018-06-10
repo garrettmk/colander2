@@ -1,59 +1,49 @@
-import importlib
-import functools
-
-from webargs import fields, validate
-from webargs.flaskparser import use_kwargs
-
 from flask import request
 from flask_restful import Resource
+
+from webargs import fields
+from webargs.flaskparser import use_kwargs
+from marshmallow import Schema
+
+from models import Task
 from tasks.broker import setup_dramatiq
 setup_dramatiq()
+
+from .common import format_response
 
 
 ########################################################################################################################
 
 
-def format_response(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            response = func(*args, **kwargs)
-        except Exception as e:
-            return {
-                'status': 'error',
-                'exception': type(e).__name__,
-                'message': str(e)
-            }
+def make_start_schema(request):
+    if 'id' in request.args:
+        opt = {'only': ('id',)}
+    else:
+        opt = {'exclude': ('id',)}
 
-        return {
-            'status': 'ok',
-            **response
-        }
-    return wrapper
+    return Tasks.StartSchema(**opt, context={'request': request})
 
 
 class Tasks(Resource):
     """Task-related API."""
     method_decorators = [format_response]
 
-    start_args = {
-        'module': fields.Str(required=True),
-        'action': fields.Str(required=True),
-        'args': fields.List(fields.Raw(), missing=lambda: []),
-        'kwargs': fields.Dict(missing=lambda: {}),
-        'options': fields.Dict(missing=lambda: {})
-    }
+    class StartSchema(Schema):
+        id = fields.Int(required=True)
+        module = fields.Str(required=True)
+        action = fields.Str(required=True)
+        args = fields.List(fields.Raw(), missing=list)
+        kwargs = fields.Dict(missing=dict)
+        options = fields.Dict(missing=dict)
 
-    @use_kwargs(start_args)
-    def post(self, module, action, args, kwargs, options):
+        class Meta:
+            strict = True
+
+    @use_kwargs(make_start_schema)
+    def post(self, id=None, module=None, action=None, args=None, kwargs=None, options=None):
         """Start a task using the POST data."""
+        task = Task.query.filter_by(id=id).first()\
+               or Task(module=module, action=action, args=args, kwargs=kwargs, options=options)
 
-        module = importlib.import_module('ext.' + module)
-        actor = getattr(module, action)
-
-        message = actor.send_with_options(args=args, kwargs=kwargs, **options)
-
-        return {
-            'message_id': message.message_id
-        }
+        return task.send()
 

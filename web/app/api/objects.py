@@ -1,9 +1,11 @@
 from flask import request
-from flask_restful import Resource, reqparse
-from webargs import fields, validate
-from webargs.flaskparser import use_args
+from flask_restful import Resource
+from webargs import fields
+from webargs.flaskparser import use_kwargs
+from marshmallow import Schema, post_load
+
 from app import db
-from models import *
+from .common import model_types, format_response
 
 
 ########################################################################################################################
@@ -12,44 +14,61 @@ from models import *
 class Objects(Resource):
     """Handles creation, deletion, and filtering of objects."""
 
-    unaliased = {
-        'vendor': Vendor,
-        'listing': Listing,
-        'inventory': Inventory,
-        'order': Order,
-    }
+    class FilterSchema(Schema):
+        """Marshmallow schema for filter requests."""
+        pageNum = fields.Int(missing=1)
+        perPage = fields.Int(missing=10)
+        getAttrs = fields.List(fields.Str(), missing=['abbreviated'])
+        query = fields.Dict(missing=None)
 
-    def get(self, type_alias):
+        class Meta:
+            strict = True
+
+        @post_load
+        def _preserve(self, data):
+            data['filters'] = {key: request.args[key] for key in request.args if key not in data}
+            return data
+
+    def build_query_from_json(self, obj_type, js):
+        """Build a SQLAlchemy query from a JSON blob."""
+        eq = [getattr(obj_type, name) == value for name, value in js.get('eq', {}).items()]
+        neq = [getattr(obj_type, name) != value for name, value in js.get('neq', {}).items()]
+        _in = [getattr(obj_type, name).in_(values) for name, values in js.get('in', {}).items()]
+        nin = [db.not_(getattr(obj_type, name).in_(values)) for name, values in js.get('nin', {}).items()]
+
+        return obj_type.query.filter(
+            *eq,
+            *neq,
+            *_in,
+            *nin
+        )
+
+    @use_kwargs(FilterSchema)
+    def get(self, type_alias, pageNum=None, perPage=None, getAttrs=None, filters={}, query=None):
         """Filter objects of the given type using query string parameters."""
-        args = request.args
-        page = int(args.get('pageNum', 1))
-        per_page = int(args.get('perPage', 10))
-        attrs = args.getlist('getAttrs') or ['abbreviated']
-        obj_type = self.unaliased[type_alias]
-        filters = {
-            a: args[a]
-            for a in args if a not in ('getAttrs', 'pageNum', 'perPage')
-        }
+        obj_type = model_types[type_alias]
+        query = self.build_query_from_json(obj_type, query) if query else obj_type.query.filter_by(**filters)
+        page = query.paginate(page=pageNum, per_page=perPage)
 
-        query = obj_type.query.filter_by(**filters) if args else obj_type.query
-        page = query.paginate(page=page, per_page=per_page)
-
-        if attrs == ['all']:
+        if getAttrs == ['all']:
             items = [m.as_json() for m in page.items]
-        elif attrs == ['abbreviated']:
+        elif getAttrs == ['abbreviated']:
             items = [m.abbr_json() for m in page.items]
         else:
-            items = [m.as_json(*attrs) for m in page.items]
+            items = [m.as_json(*getAttrs) for m in page.items]
 
         return {
             'total': page.total,
+            'page': page.page,
+            'pages': page.pages,
+            'per_page': page.per_page,
             'items': items
         }
 
     def post(self, type_alias):
         """Create an object using POST data."""
         data = dict(request.json)
-        obj_type = self.unaliased[type_alias]
+        obj_type = model_types[type_alias]
 
         obj = obj_type()
         obj.update(data)
@@ -64,7 +83,7 @@ class Objects(Resource):
     def delete(self, type_alias):
         """Delete objects specified in the DELETE data."""
         ids = request.json['ids']
-        obj_type = self.unaliased[type_alias]
+        obj_type = model_types[type_alias]
 
         try:
             obj_type.query.filter(obj_type.id.in_(ids)).delete(synchronize_session=False)
@@ -88,16 +107,10 @@ class Objects(Resource):
 class Attributes(Resource):
     """Provides low-level get and set functionality for database models."""
 
-    obj_types = {
-        'vendor': Vendor,
-        'listing': Listing,
-        'qmap': QuantityMap
-    }
-
     def get(self, type_alias, obj_id):
         attrs = [a for a in request.args] or ['abbreviated']
 
-        obj_type = self.obj_types[type_alias]
+        obj_type = model_types[type_alias]
 
         obj = obj_type.query.filter_by(id=obj_id).one()
 
@@ -113,7 +126,7 @@ class Attributes(Resource):
     def post(self, obj_type, obj_id):
         """Modify attributes on an object."""
         update = dict(request.json)
-        obj_type = self.obj_types[obj_type]
+        obj_type = model_types[obj_type]
         obj = obj_type.query.filter_by(id=obj_id).one()
 
         obj.update(update)

@@ -7,7 +7,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from flask_sqlalchemy import SignallingSession
 
 from app import db, search
-from .core import PolymorphicBase, UpdateMixin, SearchMixin, URL, CURRENCY, quantize_decimal
+from .core import Base, PolymorphicMixin, UpdateMixin, SearchMixin, URL, CURRENCY, quantize_decimal
 from .entities import Vendor
 from .orders import Inventory, InventoryDetails
 
@@ -116,7 +116,7 @@ class QuantityMap(db.Model):
 ########################################################################################################################
 
 
-class ListingDetails(db.Model, PolymorphicBase, UpdateMixin):
+class ListingDetails(db.Model, PolymorphicMixin, UpdateMixin):
     """Contains a Listing's transient details, like price, rank, rating, etc."""
     id = db.Column(db.Integer, primary_key=True)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id', ondelete='CASCADE'), nullable=False)
@@ -133,7 +133,7 @@ class ListingDetails(db.Model, PolymorphicBase, UpdateMixin):
 ########################################################################################################################
 
 
-class Listing(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
+class Listing(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
     """A description of a product for sale."""
     id = db.Column(db.Integer, primary_key=True)
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendor.id', ondelete='CASCADE'), nullable=False)
@@ -153,6 +153,9 @@ class Listing(db.Model, PolymorphicBase, UpdateMixin, SearchMixin):
     __search_fields__ = ['sku', 'title', 'brand', 'model', 'features', 'description']
     __abbreviated__ = ['id', 'vendor_id', 'sku', 'title']
     __extended__ = ['price', 'rank', 'rating']
+    __schema_set__ = {
+        'abbreviated': ('id', 'title', 'vendor_id', 'detail_url')
+    }
 
     # Pass-through properties
     price = detail_property('price')
