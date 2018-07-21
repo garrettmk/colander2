@@ -1,10 +1,45 @@
-from .common import MWSActor, xpath_get
+import xmallow as xm
+
+from .common import MWSActor, MWSResponseSchema
 
 
 ########################################################################################################################
 
 
 class ItemLookup(MWSActor):
+    """Performs an ItemLookup operation. Accepts a dictionary with a 'sku' key, and updates and returns that dictionary
+    with the results of the lookup."""
+
+    class Schema(MWSResponseSchema):
+        """Schema for ItemLookup responses."""
+
+        class ProductSchema(xm.Schema):
+            ignore_missing = True
+
+            sku = xm.String('.//ASIN', required=True)
+            detail_url = xm.Field('ASIN', cast=lambda tag: f'http://www.amazon.com/dp/{tag.text}')
+            rank = xm.Int('SalesRank')
+            category = xm.String('.//ProductGroup')
+            image_url = xm.String('.//LargeImage/URL')
+            brand = xm.First(('.//Brand', './/Manufacturer', './/Label', './/Publisher', './/Studio'))
+            model = xm.First(('.//Model', './/MPN', './/PartNumber'))
+            NumberOfItems = xm.Int('.//NumberOfItems')
+            PackageQuantity = xm.Int('.//PackageQuantity')
+            title = xm.String('.//Title')
+            upc = xm.String('.//UPC')
+            merchant = xm.String('.//Merchant/Name')
+            prime = xm.Boolean('.//IsEligibleForPrime')
+            features = xm.String('.//Feature', many=True)
+            description = xm.String('.//EditorialReview/Content')
+            price = xm.Field('.//OfferListing/Price/Amount', cast=lambda tag: int(tag.text) / 100)
+
+            def post_load(self, data):
+                if 'features' in data:
+                    data.features = '\n'.join(data.features)
+
+                return data
+
+        products = xm.Field('//Item', ProductSchema(), many=True, default=list)
 
     def api_name(self):
         return 'ProductAdvertising'
@@ -15,36 +50,15 @@ class ItemLookup(MWSActor):
         'ItemId': doc['sku'],
     }
 
-    def parse_response(self, args, kwargs, response):
+    def process_response(self, args, kwargs, response):
+        from pprint import pprint
+        pprint(response)
         doc = args[0] if args else kwargs.pop('doc')
-        result = dict(doc)
-        for item_tag in response.tree.iterdescendants('Item'):
-            result['detail_url'] = f'http://www.amazon.com/dp/{result["sku"]}'
-            result['rank'] = xpath_get('.//SalesRank', item_tag, _type=int)
-            result['category'] = xpath_get('.//ProductGroup', item_tag)
-            result['image_url'] = xpath_get('.//LargeImage/URL', item_tag)
-            result['brand'] = xpath_get('.//Brand', item_tag) \
-                              or xpath_get('.//Manufacturer', item_tag) \
-                              or xpath_get('.//Label', item_tag) \
-                              or xpath_get('.//Publisher', item_tag) \
-                              or xpath_get('.//Studio', item_tag) \
-                              or xpath_get('.//Model', item_tag)
-            result['model'] = xpath_get('.//Model', item_tag) \
-                              or xpath_get('.//MPN', item_tag) \
-                              or xpath_get('.//PartNumber', item_tag)
-            result['NumberOfItems'] = xpath_get('.//NumberOfItems', item_tag, _type=int)
-            result['PackageQuantity'] = xpath_get('.//PackageQuantity', item_tag, _type=int)
-            result['title'] = xpath_get('.//Title', item_tag)
-            result['upc'] = xpath_get('.//UPC', item_tag)
-            result['merchant'] = xpath_get('.//Merchant/Name', item_tag)
-            result['prime'] = xpath_get('.//IsEligibleForPrime', item_tag, _type=bool)
-            result['features'] = '\n'.join((t.text for t in item_tag.iterdescendants('Feature'))) or None
-            result['description'] = xpath_get('.//EditorialReview/Content', item_tag)
 
-            price = xpath_get('.//OfferListing/Price/Amount', item_tag, _type=float)
-            result['price'] = price / 100 if price is not None else None
+        if response.products:
+            doc.update(response.products[0])
 
-            result = {k: v for k, v in result.items() if v is not None}
-            break
+        if response.errors:
+            doc['errors'] = doc.get('errors', []).extend(response.errors)
 
-        return result
+        return doc

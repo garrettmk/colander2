@@ -1,38 +1,48 @@
+import queryString from "query-string";
 
-function makeGetAttrs (getAttrs, def = 'all') {
-    if (getAttrs)
-        return getAttrs.map(attr => 'getAttrs=' + attr).join('&')
-    else
-        return `getAttrs=${def}`
-}
 
-export function fetchVendor (id, options = { getAttrs: ['all'] }) {
-    const params = makeGetAttrs(options.getAttrs);
-    return fetch(`/api/obj/vendor?id=${id}&${params}`)
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export function fetchVendorNames (onSuccess, onError) {
-    fetch('/api/obj/vendor?getAttrs=id&getAttrs=name').then(response => {
-        if (!response.ok)
-            onError(new Error('fetchVendorNames failed.'));
 
-        return response.json();
-    }).then(results => {
-        let obj = {};
-        results.items.forEach(result => {
-            obj[result.id] = result.name;
-        });
-        onSuccess(obj)
-    }).catch(e => {
-        if (onError)
-            onError(e);
-        else
-            throw e;
-    })
-}
+const Colander = {
+    urlPrefix: '/api',
 
-export function fetchListing (listingId, options = { getAttrs: ['all'] }) {
-    const params = makeGetAttrs(options.getAttrs);
-    return fetch(`/api/obj/listing?id=${listingId}&${params}`)
-}
+    post: function (url, { onSuccess, onFailure, ...bodyObj }) {
+        const prefixedUrl = Colander.urlPrefix + url;
+        const body = JSON.stringify(bodyObj);
 
+        fetch(prefixedUrl, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body
+        }).then(response => {
+            if (response.ok)
+                return response.json();
+            throw new Error(`Could not fetch data: ${prefixedUrl}`)
+        }).then(results => onSuccess ? onSuccess(results) : null)
+          .catch(error => onFailure ? onFailure(error) : null)
+    },
+
+    get: function (url, { onSuccess, onFailure, ...params }) {
+        const prefixedUrl = Colander.urlPrefix + url;
+        const qs = '?' + queryString.stringify(params);
+
+        fetch(prefixedUrl + qs).then(response => {
+            if (response.ok)
+                return response.json();
+            throw new Error('Could not fetch data: ' + prefixedUrl + qs)
+        }).then(results => onSuccess ? onSuccess(results) : null)
+          .catch(error => onFailure ? onFailure(error) : null);
+    },
+
+
+    filter: function (type, options) { Colander.post(`/${type}/filter`, options) },
+    update: function (type, options) { Colander.post(`/${type}/update`, options) },
+    create: function (type, options) { Colander.post(`/${type}/create`, options) },
+    delete_: function (type, options) { Colander.post(`/$${type}/delete`, options) },
+    quick: function (options) { Colander.get('/quick', options) },
+    sendTask: function (options) { Colander.post('/tasks', options)}
+};
+
+
+export default Colander;

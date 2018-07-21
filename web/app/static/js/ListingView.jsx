@@ -1,94 +1,65 @@
 import React from "react";
-import VendorDetails from "./VendorDetails";
-import ListingDetails from "./ListingDetails";
-import { fetchVendor, fetchVendorNames, fetchListing } from "./colander";
-import ExtraDetails from "./ExtraDetails";
-import InventoryList from "./InventoryList";
+import _ from "lodash";
+import { Grid } from "semantic-ui-react";
+
+import { asCount, asCurrency, asPercent } from "./App";
+import ObjectDetails from "./ObjectDetails";
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+function ListingDetails (props) {
+    const { id } = props;
+
+    return <ObjectDetails
+        type={'listing'}
+        id={id}
+        view={{ vendor: { _only: ['name'] } }}
+        strict
+        extra
+        format={{
+            last_modified: lst => ({ label: 'Last Modified', value: lst.last_modified}),
+            vendor: lst => ({ label: 'Vendor', value: lst.vendor ? lst.vendor.name : 'n/a' }),
+            sku: lst => ({ label: 'SKU', value: lst.sku }),
+            brand: lst => ({ label: 'Brand', value: lst.brand }),
+            model: lst => ({ label: 'Model', value: lst.model }),
+            price: lst => ({ label: 'Price', value: asCurrency(lst.price) }),
+            quantity: lst => ({ label: 'Quantity', value: asCount(lst.quantity) }),
+            category: lst => ({ label: 'Category', value: lst.extra ? lst.extra.category : 'n/a' }),
+            rank: lst => ({ label: 'Rank', value: asCount(lst.rank) }),
+            rating: lst => ({ label: 'Rating', value: asPercent(lst.rating) })
+        }}
+    />
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 export default class ListingView extends React.Component {
 
-    constructor (props) {
+    constructor(props) {
         super(props);
 
         this.state = {
             loading: true,
             listing: {},
-            vendor: {},
-            inventories: {}
         };
     }
 
-    componentDidMount () {
-        fetchListing(this.props.match.params.listingId).then(response => {
-            if (response.ok)
-                return response.json();
-            throw new Error('Could not fetch listing.')
-        }).then(results => {
-            this.setState({
-                listing: results.items[0]
-            });
-
-            fetchVendor(this.state.listing.vendor_id, { getAttrs: ['abbreviated'] }).then(response => {
-                if (response.ok)
-                    return response.json();
-                throw new Error('Could not load vendor info.')
-            }).then(results => {
-                this.setState({
-                    loading: false,
-                    vendor: results.items[0]
-                })
-            });
-
-            fetch(`/api/obj/inventory?listing_id=${this.state.listing.id}`).then(response => {
-                if (response.ok)
-                    return response.json();
-                throw new Error('Could not load inventory data.')
-            }).then(results => {
-                this.setState({
-                    inventories: results
-                })
-            })
-
-        }).catch(e => {
-            this.setState({
-                loading: false,
-                vendor: {}
-            })
-        })
-    }
-
-    componentDidUpdate (prevProps, prevState) {
-        if (this.props.match.listingId !== prevProps.match.listingId)
-            this.componentDidMount()
-    }
-
     render () {
+        const listingId = this.props.match.params.listingId;
+
         return (
-            <div>
-                {this.state.loading
-                    ? <span>Loading...</span>
-                    : <div>
-                        <VendorDetails
-                            loading={this.state.loading}
-                            vendor={this.state.vendor}
-                        />
-                        <ListingDetails
-                            loading={this.state.loading}
-                            listing={this.state.listing}
-                        />
-                        <ExtraDetails
-                            loading={this.state.loading}
-                            data={this.state.listing.extra}
-                        />
-                        <InventoryList
-                            loading={this.state.loading}
-                            total={this.state.inventories.total}
-                            inventories={this.state.inventories.items}
-                        />
-                        <pre>{JSON.stringify(this.state, null, '  ')}</pre>
-                    </div>}
-            </div>
+            <Grid columns={2}>
+                <Grid.Column width={4}>
+                    <ListingDetails id={listingId}/>
+                </Grid.Column>
+                <Grid.Column width={12}>
+                </Grid.Column>
+            </Grid>
         )
     }
+
 }

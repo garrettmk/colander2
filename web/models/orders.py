@@ -7,7 +7,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import UniqueConstraint
 
 from app import db
-from .core import PolymorphicMixin, UpdateMixin, SearchMixin, CURRENCY
+from core import CURRENCY
+from .mixins import SearchMixin
 from .finances import OrderEvent, OrderItemEvent, InventoryAdjustment
 
 
@@ -46,7 +47,7 @@ def inventory_property(name, default=None):
 ########################################################################################################################
 
 
-class Order(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
+class Order(db.Model, SearchMixin):
     """Represents a transfer of inventory from one entity to another."""
     id = db.Column(db.Integer, primary_key=True)
     source_id = db.Column(db.Integer, db.ForeignKey('entity.id', ondelete='RESTRICT'), nullable=False)
@@ -68,19 +69,10 @@ class Order(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
     shipments = db.relationship('Shipment', back_populates='order')
     financials = db.relationship('OrderEvent', back_populates='order')
 
-    __search_fields__ = ['order_number']
-    __extended__ = ['source', 'destination']
-
     def __repr__(self):
         src_name = self.source.name if self.source else None
         dest_name = self.destination.name if self.destination else None
         return f'<{type(self).__name__} ({self.id}) {self.order_number} {src_name} -> {dest_name}>'
-
-    def encode_attribute(self, attr):
-        if attr == 'source':
-            return self.source.abbr_json()
-        elif attr == 'destination':
-            return self.destination.abbr_json()
 
     def send_inventory(self):
         for item in self.items:
@@ -113,7 +105,7 @@ class Order(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
 ########################################################################################################################
 
 
-class OrderItem(db.Model, PolymorphicMixin, UpdateMixin):
+class OrderItem(db.Model):
     """A single SKU in an order."""
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete='CASCADE'), nullable=False)
@@ -200,7 +192,7 @@ class OrderItem(db.Model, PolymorphicMixin, UpdateMixin):
 ########################################################################################################################
 
 
-class Shipment(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
+class Shipment(db.Model, SearchMixin):
     """An shipment of products."""
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete='CASCADE'), nullable=False)
@@ -214,13 +206,11 @@ class Shipment(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
     order = db.relationship('Order', back_populates='shipments')
     items = db.relationship('OrderItem', back_populates='shipment')
 
-    __search_fields__ = ['carrier', 'tracking_number', 'status']
-
 
 ########################################################################################################################
 
 
-class InventoryDetails(db.Model, UpdateMixin):
+class InventoryDetails(db.Model):
     """Contains a listing's transient information details."""
     id = db.Column(db.Integer, primary_key=True)
     inventory_id = db.Column(db.Integer, db.ForeignKey('inventory.id', ondelete='CASCADE'), nullable=False)
@@ -239,15 +229,13 @@ class InventoryDetails(db.Model, UpdateMixin):
 ########################################################################################################################
 
 
-class Inventory(db.Model, UpdateMixin):
+class Inventory(db.Model):
     """Maps an inventory relationship between a vendor listing and a market listing."""
     id = db.Column(db.Integer, primary_key=True)
     owner_id = db.Column(db.Integer, db.ForeignKey('entity.id', ondelete='CASCADE'), nullable=False)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id', ondelete='CASCADE'), nullable=False)
 
     __table_args__ = (UniqueConstraint('listing_id', 'owner_id'),)
-    __abbreviated__ = ['id', 'owner_id', 'listing_id', 'active', 'fulfillable']
-    __extended__ = ['active', 'fulfillable', 'reserved', 'unsellable', 'price', 'timestamp', 'owner', 'listing']
 
     # Details
     active = inventory_property('active')
@@ -295,13 +283,6 @@ class Inventory(db.Model, UpdateMixin):
     def _ensure_owner(mapper, conn, target):
         if target.owner_id is None:
             target.owner_id = target.listing.vendor_id
-
-    def encode_attribute(self, attr):
-        if attr in ('owner', 'listing'):
-            obj = getattr(self, attr)
-            return obj.abbr_json()
-
-        return super().encode_attribute(attr)
 
     def calculate_cost(self):
         """Calculates the total cost and average cost each for this inventory."""
@@ -396,7 +377,7 @@ def lcm(*args):
 ########################################################################################################################
 
 
-class InvConversionSource(db.Model, UpdateMixin):
+class InvConversionSource(db.Model):
     """A source inventory used by an InventoryConversion."""
     id = db.Column(db.Integer, primary_key=True)
     conv_id = db.Column(db.Integer, db.ForeignKey('inventory_conversion.id', ondelete='CASCADE'), nullable=False)
@@ -415,7 +396,7 @@ class InvConversionSource(db.Model, UpdateMixin):
 ########################################################################################################################
 
 
-class InventoryConversion(db.Model, UpdateMixin):
+class InventoryConversion(db.Model):
     """Converts one or more source inventories into a destination inventory."""
     id = db.Column(db.Integer, primary_key=True)
     dest_id = db.Column(db.Integer, db.ForeignKey('inventory.id', ondelete='CASCADE'), nullable=False)

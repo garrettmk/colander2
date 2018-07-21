@@ -4,7 +4,9 @@ import redis
 import requests
 import dramatiq
 import amazonmws
+import attrdict
 from dramatiq.rate_limits import RateLimiter
+import xmallow as xm
 from lxml import etree
 
 from app import create_app, db, Config
@@ -15,6 +17,23 @@ from tasks.broker import rate_limiter_backend
 from ext.core import ExtActor
 
 ISO_8601 = '%Y-%m-%dT%H:%M:%S'
+
+xm.Schema.dict_type = attrdict.AttrDict
+
+
+########################################################################################################################
+
+
+def remove_namespaces(xml):
+    """Remove all traces of namespaces from the given XML string."""
+    re_ns_decl = re.compile(r' xmlns(:\w*)?="[^"]*"', re.IGNORECASE)
+    re_ns_open = re.compile(r'<\w+:')
+    re_ns_close = re.compile(r'/\w+:')
+    #
+    response = re_ns_decl.sub('', xml)  # Remove namespace declarations
+    response = re_ns_open.sub('<', response)  # Remove namespaces in opening tags
+    response = re_ns_close.sub('/', response)  # Remove namespaces in closing tags
+    return response
 
 
 ########################################################################################################################
@@ -118,6 +137,28 @@ def format_parsed_response(action, params, results=None, errors=None, succeeded=
 ########################################################################################################################
 
 
+class MWSResponseSchema(xm.Schema):
+    """Base schema for MWS responses."""
+    ignore_missing = True
+
+    class Error(xm.Schema):
+        """Schema for MWS errors."""
+        type = xm.Field('.//Type')
+        code = xm.Field('.//Code')
+        message = xm.Field('.//Message')
+
+    request_id = xm.String('//RequestId')
+    errors = xm.Field('//Error', Error(), default=list, many=True)
+
+
+class RawXMLSchema(MWSResponseSchema):
+    """Utility schema that just grabs the raw XML response."""
+    xml = xm.Field('.', cast=lambda tag: etree.tostring(tag).decode(), default='Not found?')
+
+
+########################################################################################################################
+
+
 class AmazonMWSError(Exception):
     """Base class for MWS errors."""
     def __init__(self, type=None, code=None, message=None):
@@ -155,6 +196,7 @@ class MWSActor(ExtActor):
         def retry_when(retries_so_far, exception):
             return retries_so_far < 10 and isinstance(exception, (RequestThrottled, InternalError, QuotaExceeded))
 
+    Schema = RawXMLSchema
     apis = {}
     redis = redis.from_url(Config.REDIS_URL)
     pending_expires = 200  # TTL for pending keys in redis. They are deliberately cleared unless something bad happens
@@ -201,13 +243,14 @@ class MWSActor(ExtActor):
 
     def build_params(self, *args, **kwargs):
         """Return a dictionary of parameters to send to the API call."""
-        raise NotImplementedError
+        return dict()
 
     def perform(self, *args, **kwargs):
         self.vendor_id = kwargs.pop('vendor_id', None)
         params = self.build_params(*args, **kwargs)
+
         response = self.make_api_call(type(self).__name__, **params)
-        return self.parse_response(args, kwargs, response)
+        return self.process_response(args, kwargs, response)
 
     def make_api_call(self, action, throttle_action=None, **params):
         """Make an API call and return an AmzXmlResponse object."""
@@ -232,34 +275,35 @@ class MWSActor(ExtActor):
 
         # Make the API call
         api = self.get_api(vendor_id, api_name)
-        response = AmzXmlResponse(
-            getattr(api, action)(**params).text
-        )
+        xml = getattr(api, action)(**params).text
 
         # Save usage
         self.save_usage(vendor_id, throttle_action, limits)
 
-        # Raise an exception if needed
-        code = response.error_code
-        exc_type = None
-        if code == 'RequestThrottled':
-            exc_type = RequestThrottled
-            sleep = stretch + limits['restore_rate']
-            expires = int(sleep * 10 * 1000)
-            self.redis.set(
-                f'{throttle_action}_{vendor_id}_stretch',
-                sleep,
-                px=expires
-            )
-        elif code == 'QuotaExceeded':
-            exc_type = QuotaExceeded
-        elif code == 'InternalError':
-            exc_type = InternalError
-        elif code is not None:
-            exc_type = AmazonMWSError
+        # Parse the response
+        xml = remove_namespaces(xml)
+        response = self.Schema().load(xml)
 
-        if exc_type:
-            raise exc_type(response.error_type, response.error_code, response.error_message)
+        # Raise an exception if needed
+        if response.errors:
+            codes = [e.code for e in response.errors]
+            exc_type = None
+            if 'RequestThrottled' in codes:
+                exc_type = RequestThrottled
+                sleep = stretch + limits['restore_rate']
+                expires = int(sleep * 10 * 1000)
+                self.redis.set(
+                    f'{throttle_action}_{vendor_id}_stretch',
+                    sleep,
+                    px=expires
+                )
+            elif 'QuotaExceeded' in codes:
+                exc_type = QuotaExceeded
+            elif 'InternalError' in codes:
+                exc_type = InternalError
+
+            if exc_type:
+                raise exc_type(response.error_type, response.error_code, response.error_message)
 
         return response
 
@@ -353,105 +397,7 @@ class MWSActor(ExtActor):
 
         return max((quota_level + pending + 1 - quota_max), 0) * restore_rate
 
-    def parse_response(self, args, kwargs, response):
+    def process_response(self, args, kwargs, response):
         """Return the parsed version of the response."""
-        return etree.tostring(response.tree, pretty_print=True).decode()
-
-
-########################################################################################################################
-
-
-def xpath_get(path, tag, _type=str, default=None):
-    """Helper method for getting data values from lxml tags using XPath."""
-    try:
-        data = tag.xpath(path)[0].text
-    except IndexError:
-        return default
-
-    if _type is bool:
-        if data in ('1', 'true', 'yes'):
-            return True
-        elif data in ('0', 'false', 'no'):
-            return False
-        else:
-            return bool(data)
-
-    if data == '':
-        return default
-
-    return _type(data)
-
-
-########################################################################################################################
-
-
-class AmzXmlResponse:
-    """A utility class for dealing with Amazon's XML responses."""
-
-    def __init__(self, xml=None):
-        self._xml = None
-        self.tree = None
-
-        self.xml = xml
-
-    @property
-    def xml(self):
-        return self._xml
-
-    @xml.setter
-    def xml(self, xml):
-        """Perform automatic etree parsing."""
-        self._xml, self.tree = None, None
-
-        if xml is not None:
-            self._xml = self.remove_namespaces(xml)
-            self.tree = etree.fromstring(self._xml)
-
-    @staticmethod
-    def remove_namespaces(xml):
-        """Remove all traces of namespaces from the given XML string."""
-        re_ns_decl = re.compile(r' xmlns(:\w*)?="[^"]*"', re.IGNORECASE)
-        re_ns_open = re.compile(r'<\w+:')
-        re_ns_close = re.compile(r'/\w+:')
-
-        response = re_ns_decl.sub('', xml)  # Remove namespace declarations
-        response = re_ns_open.sub('<', response)  # Remove namespaces in opening tags
-        response = re_ns_close.sub('/', response)  # Remove namespaces in closing tags
         return response
 
-    def xpath_get(self, *args, **kwargs):
-        """Utility method for getting data values from XPath selectors."""
-        return xpath_get(*args, tag=self.tree, **kwargs)
-
-    @property
-    def error_type(self):
-        """Return the error type if there was an error, otherwise None."""
-        return None if self.tree is None else self.xpath_get('/ErrorResponse/Error/Type')
-
-    @property
-    def error_code(self):
-        """Holds the error code if the response was an error, otherwise None."""
-        return None if self.tree is None else self.xpath_get('/ErrorResponse/Error/Code')
-
-    @property
-    def error_message(self):
-        """Holds the error message if the response was an error, otherwise None."""
-        return None if self.tree is None else self.xpath_get('/ErrorResponse/Error/Message')
-
-    @property
-    def request_id(self):
-        """Returns the RequestID parameter."""
-        if self.tree is None:
-            return None
-
-        return self.xpath_get('//RequestID')
-
-    def error_as_json(self):
-        """Formats an error response as a simple JSON object."""
-        return {
-            'error': {
-                'code': self.error_code,
-                'message': self.error_message,
-                'request_id': self.request_id
-            }
-        }

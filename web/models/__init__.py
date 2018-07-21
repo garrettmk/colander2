@@ -1,4 +1,5 @@
-from .core import User, Task
+from .users import User
+from .extensions import Extension, Task
 from .entities import Entity, Vendor, Customer
 from .finances import FinancialAccount, FinancialEvent, OrderEvent, OrderItemEvent, InventoryAdjustment
 from .listings import QuantityMap, ListingDetails, Listing
@@ -7,6 +8,7 @@ from .relationships import Relationship, RelationshipSource, Opportunity, Opport
 
 __all__ = [
     'User', 'Task',
+    'Extension',
     'Entity', 'Vendor', 'Customer',
     'FinancialAccount', 'FinancialEvent', 'OrderEvent', 'OrderItemEvent', 'InventoryAdjustment',
     'QuantityMap', 'Listing', 'ListingDetails',

@@ -22,11 +22,28 @@ export default class InventoryList extends React.Component {
     }
 
     fetchInventories (page = 1) {
-        //this.setState({ loading: true });
-        const filter = this.props.foreign ? 'foreign' : this.props.own ? 'own': 'all';
-        const url = `/api/queries/inventory?owner_id=${this.props.ownerId}&filter=${filter}&getAttrs=all&pageNum=${page}`;
+        const url = '/api/obj/inventory';
+        const query = {
+            owner_id: this.props.ownerId,
+            listing: {
+                vendor_id: this.props.ownerId
+            }
+        };
+        const view = {
+            _page: page,
+            _only: ['id', 'owner', 'listing', 'fulfillable'],
+            owner: {
+                _only: ['name'],
+            },
+            listing: {
+                _only: ['sku', 'title']
+            }
+        };
 
-        fetch(url).then(response => {
+        const queryString = encodeURIComponent(JSON.stringify(query));
+        const viewString = encodeURIComponent(JSON.stringify(view));
+
+        fetch(`${url}?_query=${queryString}&_view=${viewString}`).then(response => {
             if (response.ok)
                 return response.json();
             throw new Error('Could not fetch inventories.')
@@ -41,15 +58,8 @@ export default class InventoryList extends React.Component {
             })
         }).catch(error => {
             alert(error);
-            this.setState({
-                loading: false,
-                total: null,
-                page: null,
-                pages: null,
-                perPage: null,
-                inventories: []
-            })
-        })
+            this.setState({ loading: false })
+        });
     }
 
     componentDidMount () {

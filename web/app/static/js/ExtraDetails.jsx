@@ -1,52 +1,48 @@
 import React from "react";
+import Colander from "./colander";
+
+import { Segment, Header, Message } from "semantic-ui-react";
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 export default class ExtraDetails extends React.Component {
 
     constructor (props) {
         super(props);
+
         this.state = {
             loading: true,
-            data: {}
+            data: {},
+            error: undefined
         }
     }
 
     componentDidMount () {
-        this.setState({
-            loading: true
+        this.setState({ loading: true });
+        const { type, id } = this.props;
+
+        Colander.filter(type, {
+            query: { id },
+            view: { _only: ['extra'] },
+
+            onSuccess: results => { this.setState({ loading: false, error: undefined, data: results.items[0].extra }) },
+            onFailure: error => { this.setState({ loading: false, error: error })}
         });
-
-        const objType = this.props.objType;
-        const objId = this.props.objId;
-
-        fetch(`/api/obj/${objType}?id=${objId}&getAttrs=extra`).then(response => {
-            if (response.ok)
-                return response.json()
-            throw new Error('Could not fetch extra data.')
-        }).then(results => {
-            this.setState({
-                loading: false,
-                data: results.items[0].extra
-            })
-        }).catch(error => {
-            alert(error);
-            this.setState({
-                loading: false,
-                data: {}
-            })
-        })
     }
 
     render () {
+        const { loading, data, error } = this.state;
+
         return (
-            <div className={"outlined"}>
-                {this.state.loading
-                    ? <span>Loading...</span>
-                    : this.state.data
-                        ? <pre>{JSON.stringify(this.state.data, null, '  ')}</pre>
-                        : <span>None</span>
+            <Segment raised loading={loading}>
+                <Header size={'small'} dividing>Extra</Header>
+                {error
+                    ? <Message error>{error}</Message>
+                    : <pre style={{ overflow: 'auto' }}>{JSON.stringify(data, null, '  ')}</pre>
                 }
-            </div>
+            </Segment>
         )
     }
 }

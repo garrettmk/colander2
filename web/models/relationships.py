@@ -4,9 +4,9 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app import db
-from .core import PolymorphicMixin, CURRENCY
+from core import CURRENCY
+from .mixins import PolymorphicMixin
 from .listings import Listing, ListingDetails
-from .finances import FinancialAccount, InventoryAdjustment
 
 
 ########################################################################################################################

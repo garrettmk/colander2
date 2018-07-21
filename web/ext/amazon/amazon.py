@@ -22,14 +22,14 @@ def process_listings(docs):
             mws.GetCompetitivePricingForASIN.message(doc),
             pa.ItemLookup.message(),
             mws.GetMyFeesEstimate.message(),
-            import_listing.message()
+            ImportListing.message()
         ]).run()
 
 
 @ext_actor
 def process_inbound_orders(docs, vendor_id):
     for doc in docs:
-        order_id = import_inbound_order(doc, vendor_id=vendor_id)
+        order_id = ImportInboundOrder(doc, vendor_id=vendor_id)
         pipeline([
             mws.ListInboundShipmentItems.message(doc, vendor_id=vendor_id),
             process_inbound_order_items.message(vendor_id=vendor_id),
@@ -307,11 +307,14 @@ def process_inventory(docs, vendor_id):
     for doc in docs:
         # Import the Amazon
         amz_doc = {'sku': doc['sku'], 'fnsku': doc['fnsku']}
-        amz_id = import_listing(amz_doc)
+        amz_id = ImportListing(amz_doc)
 
         # Import the vendor listing
         vnd_doc = {'vendor_id': vendor_id, 'sku': doc['msku']}
-        vnd_id = getattr(vendor.extension, 'import_listing', tasks.ops.listings.import_listing_default)(vnd_doc)
+        try:
+            vnd_id = vendor.ext.call('import_listing', **vnd_doc)
+        except (ValueError, AttributeError):
+            vnd_id = tasks.ops.listings.import_listing_default(vnd_doc)
 
         # Update or create the inventory relationship
         inventory = Inventory.query.filter_by(
@@ -332,7 +335,7 @@ def process_inventory(docs, vendor_id):
             mws.GetCompetitivePricingForASIN.message(amz_doc, vendor_id=vendor_id),
             pa.ItemLookup.message(vendor_id=vendor_id),
             mws.GetMyFeesEstimate.message(vendor_id=vendor_id),
-            import_listing.message(),
+            ImportListing.message(),
             copy_to_listing.message(vnd_id)
         ]).run()
 
@@ -353,105 +356,123 @@ def copy_to_listing(dest_id, source_id):
 ########################################################################################################################
 
 
-@ext_actor
-def import_listing(doc):
-    amazon = Vendor.query.filter_by(name='Amazon').one()
-    listing = Listing.query.filter_by(vendor_id=amazon.id, sku=doc['sku']).first()
-    if listing is None:
-        listing = Listing(vendor=amazon)
+class ImportListing(ExtActor):
+    """Import a listing specified in a JSON document. Only looks at the document's 'sku' field."""
+    public = True
 
-    amz_details = {k: v for k, v in {
-        'offers': doc.pop('offers', None),
-        'prime': doc.pop('prime', None)
-    }.items() if v is not None}
+    def perform(self, doc, **kwargs):
+        amazon = Vendor.query.filter_by(name='Amazon').one()
+        listing = Listing.query.filter_by(vendor_id=amazon.id, sku=doc['sku']).first()
+        if listing is None:
+            listing = Listing(vendor=amazon)
 
-    listing.update(doc)
-    if amz_details:
-        if not listing.details or listing.details[-1].id:
-            listing.details.append(ListingDetails(listing_id=listing.id))
-        listing.details[-1].update(amz_details)
+        amz_details = {k: v for k, v in {
+            'offers': doc.pop('offers', None),
+            'prime': doc.pop('prime', None)
+        }.items() if v is not None}
 
-    db.session.add(listing)
-    db.session.commit()
+        listing.update(doc)
+        if amz_details:
+            if not listing.details or listing.details[-1].id:
+                listing.details.append(ListingDetails(listing_id=listing.id))
+            listing.details[-1].update(amz_details)
 
-    return listing.id
+        db.session.add(listing)
+        db.session.commit()
+
+        return listing.id
 
 
-@ext_actor
-def update_listings(listing_ids):
-    listings = Listing.query.filter(Listing.id.in_(listing_ids)).all()
+class UpdateListings(ExtActor):
+    """Updates the Listing models with the given IDs."""
+    public = True
 
-    for listing in listings:
-        doc = {'sku': listing.sku}
+    def perform(self, listing_ids):
+        listings = Listing.query.filter(Listing.id.in_(listing_ids)).all()
+
+        for listing in listings:
+            doc = {'sku': listing.sku}
+
+            pipeline([
+                mws.GetCompetitivePricingForASIN.message(doc),
+                pa.ItemLookup.message(),
+                mws.GetMyFeesEstimate.message(),
+                ImportListing.message()
+            ]).run()
+
+
+class ImportMatches(ExtActor):
+    """Search the vendor and import any listings that match the given product."""
+    public = True
+
+    def perform(self, listing_id):
+        listing = Listing.query.filter_by(id=listing_id).one()
+
+        if listing.brand and listing.model:
+            query_str = f'{listing.brand} {listing.model}'
+        elif listing.title:
+            query_str = listing.title
+        else:
+            raise ValueError('Listing does not contain enough information to match.')
 
         pipeline([
-            mws.GetCompetitivePricingForASIN.message(doc),
-            pa.ItemLookup.message(),
-            mws.GetMyFeesEstimate.message(),
-            import_listing.message()
+            mws.ListMatchingProducts.message(query_str),
+            process_listings.message()
         ]).run()
 
 
-@ext_actor
-def import_matches(listing_id):
-    """Import any ASINs that might match listing."""
-    listing = Listing.query.filter_by(id=listing_id).one()
+class ImportInventory(ExtActor):
+    """Import inventory data for the given vendor."""
 
-    if listing.brand and listing.model:
-        query_str = f'{listing.brand} {listing.model}'
-    elif listing.title:
-        query_str = listing.title
-    else:
-        raise ValueError('Listing does not contain enough information to match.')
-
-    pipeline([
-        mws.ListMatchingProducts.message(query_str),
-        process_listings.message()
-    ]).run()
+    def perform(self, vendor_id):
+        """Import any ASINs that have had inventory activity in the last 90 days."""
+        pipeline([
+            mws.ListInventorySupply.message(vendor_id=vendor_id),
+            process_inventory.message(vendor_id=vendor_id)
+        ]).run()
 
 
-@ext_actor
-def import_inventory(vendor_id):
-    """Import any ASINs that have had inventory activity in the last 90 days."""
-    pipeline([
-        mws.ListInventorySupply.message(vendor_id=vendor_id),
-        process_inventory.message(vendor_id=vendor_id)
-    ]).run()
+class ImportInboundOrder(ExtActor):
+    """Create or update the order specified by the document and the vendor ID."""
+
+    def perform(self, doc, vendor_id):
+        amazon = Vendor.query.filter_by(name='Amazon').one()
+        vendor = Vendor.query.filter_by(id=vendor_id).one()
+
+        order = Order.query.filter_by(order_number=doc['order_number']).first() or Order()
+        order.update(source_id=vendor.id, dest_id=amazon.id, **doc)
+
+        db.session.add(order)
+        db.session.commit()
+
+        return order.id
 
 
-@ext_actor
-def import_inbound_order(doc, vendor_id):
-    amazon = Vendor.query.filter_by(name='Amazon').one()
-    vendor = Vendor.query.filter_by(id=vendor_id).one()
+class ImportInboundOrders(ExtActor):
+    """Import inbound order data for the given vendor."""
 
-    order = Order.query.filter_by(order_number=doc['order_number']).first() or Order()
-    order.update(source_id=vendor.id, dest_id=amazon.id, **doc)
-
-    db.session.add(order)
-    db.session.commit()
-
-    return order.id
+    def perform(self, vendor_id):
+        pipeline([
+            mws.ListInboundShipments.message(vendor_id=vendor_id),
+            process_inbound_orders.message(vendor_id=vendor_id)
+        ]).run()
 
 
-@ext_actor
-def import_inbound_orders(vendor_id):
-    pipeline([
-        mws.ListInboundShipments.message(vendor_id=vendor_id),
-        process_inbound_orders.message(vendor_id=vendor_id)
-    ]).run()
+class ImportOrders(ExtActor):
+    """Import customer order data for the given vendor."""
+
+    def perform(self, vendor_id):
+        pipeline([
+            mws.ListOrders.message(vendor_id=vendor_id),
+            process_orders.message(vendor_id=vendor_id)
+        ]).run()
 
 
-@ext_actor
-def import_orders(vendor_id):
-    pipeline([
-        mws.ListOrders.message(vendor_id=vendor_id),
-        process_orders.message(vendor_id=vendor_id)
-    ]).run()
+class ImportFinancials(ExtActor):
+    """Import financial data for the given vendor."""
 
-
-@ext_actor
-def import_financials(vendor_id):
-    pipeline([
-        mws.ListFinancialEventGroups.message(vendor_id=vendor_id),
-        process_financial_event_groups.message(vendor_id)
-    ]).run()
+    def perform(self, vendor_id):
+        pipeline([
+            mws.ListFinancialEventGroups.message(vendor_id=vendor_id),
+            process_financial_event_groups.message(vendor_id)
+        ]).run()

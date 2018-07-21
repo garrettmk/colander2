@@ -2,7 +2,7 @@ import React from "react";
 import Arguments from "./Arguments";
 
 
-export default class ExtensionAction extends React.Component {
+export default class Extension extends React.Component {
 
     // vendorId
     constructor (props) {
@@ -18,8 +18,7 @@ export default class ExtensionAction extends React.Component {
 
         this.state = {
             loading: true,
-            module: '',
-            actions: [],
+            ext: {},
             selected: '',
             args: [],
             kwargs: {},
@@ -32,32 +31,35 @@ export default class ExtensionAction extends React.Component {
     }
 
     fetchExtension () {
-        this.setState({
-            loading: true,
-        });
+        this.setState({ loading: true, });
 
-        fetch(`/api/obj/vendor?id=${this.props.vendorId}&getAttrs=ext_module&getAttrs=extension`).then(response => {
+        const url = '/api/obj/extension';
+        const query = { id: this.props.id };
+        const view = { tasks: { _exclude: ['ext_id', 'extension'] } };
+
+        const queryString = encodeURIComponent(JSON.stringify(query));
+        const viewString = encodeURIComponent(JSON.stringify(view));
+
+        fetch(`${url}?_query=${queryString}&_view=${viewString}`).then(response => {
             if (response.ok)
                 return response.json();
             throw new Error('Could not fetch extension information.')
         }).then(results => {
+
             this.setState({
                 loading: false,
-                module: results.items[0].ext_module,
-                actions: results.items[0].extension,
+                ext: results.items[0] || { exports: {} },
+                selected: results.items[0] ? Object.keys(results.items[0].exports)[0] : ''
             })
         }).catch(error => {
             alert(error);
             this.setState({
                 loading: false,
-                module: '',
-                actions: []
             })
         })
     }
 
     sendExtAction (data) {
-        console.log(data);
         fetch('/api/tasks', {
             body: JSON.stringify(data),
             headers: {
@@ -74,10 +76,9 @@ export default class ExtensionAction extends React.Component {
     }
 
     handleActionChange (e) {
+        console.log(e);
         const newAction = e.target.value;
-        this.setState(currentState => {
-            return { selected: newAction }
-        });
+        this.setState({ selected: newAction });
     }
 
     handleArgumentsChange (newArgs) {
@@ -94,10 +95,12 @@ export default class ExtensionAction extends React.Component {
 
     handleSubmit () {
         this.sendExtAction({
-            module: this.state.module,
+            module: this.state.ext.module,
             action: this.state.selected,
-            args: this.state.args,
-            kwargs: this.state.kwargs
+            params: {
+                args: this.state.args,
+                kwargs: this.state.kwargs
+            }
         });
     }
 
@@ -112,47 +115,35 @@ export default class ExtensionAction extends React.Component {
     render () {
         return (
             <div className={"outlined"}>
-                <h4>Extension: {this.state.loading ? 'Loading...' : this.state.module}</h4>
+                <h4>Extension</h4>
                 {this.state.loading
-                    ? ''
-                    : <table>
-                        <tbody>
-                        <tr>
-                            <td>
-                                <div>
-                                    <h6>Action</h6>
-                                    <select value={this.state.selected} onChange={this.handleActionChange}>
-                                        {this.state.actions.map(action => (
-                                            <option key={action} value={action}>{action}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div>
-                                    <h6>Arguments</h6>
-                                    <Arguments data={this.state.args} onDataChanged={this.handleArgumentsChange}/>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div>
-                                    <h6>Parameters</h6>
-                                    <Arguments data={this.state.kwargs} onDataChanged={this.handleKwargsChange}/>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <button onClick={this.handleSubmit}>Send</button>
-                                <button onClick={this.handleClear}>Clear</button>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    ? 'Loading...'
+                    : <div>
+                        <ul>
+                            <li>Name: {this.state.ext.name}</li>
+                            <li>Module: {this.state.ext.module}</li>
+                        </ul>
+                        <ul>
+                            <li>
+                                Action: <select value={this.state.selected} onChange={this.handleActionChange}>
+                                            {Object.keys(this.state.ext.exports).map(action => {
+                                                console.log(action);
+                                                return <option key={action} value={action}>{action}</option>
+                                            })}
+                                        </select>
+                            </li>
+                            <li>
+                                Arguments: <Arguments data={this.state.args} onDataChanged={this.handleArgumentsChange}/>
+                            </li>
+                            <li>
+                                Parameters: <Arguments data={this.state.kwargs} onDataChanged={this.handleKwargsChange}/>
+                            </li>
+                        </ul>
+                        <div>
+                            <button onClick={this.handleSubmit}>Send</button>
+                            <button onClick={this.handleClear}>Clear</button>
+                        </div>
+                    </div>
                 }
             </div>
         )

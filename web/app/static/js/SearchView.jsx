@@ -2,6 +2,7 @@ import React from "react";
 import update from "immutability-helper";
 import ListingsList from "./ListingsList";
 import VendorsList from "./VendorsList";
+import ExtensionsList from "./ExtensionsList";
 
 
 export default class SearchView extends React.Component {
@@ -19,6 +20,12 @@ export default class SearchView extends React.Component {
                     results: []
                 },
                 vendor: {
+                    total: 0,
+                    page: 0,
+                    pages: 0,
+                    results: []
+                },
+                extension: {
                     total: 0,
                     page: 0,
                     pages: 0,
@@ -113,6 +120,15 @@ export default class SearchView extends React.Component {
             <div>
                 <h2>SearchView</h2>
                 <p>Location: {this.props.location.search}</p>
+                <ExtensionsList
+                    loading={this.state.loading}
+                    total={this.state.results.extension.total}
+                    extensions={this.state.results.extension.results}
+                    page={this.state.results.extension.page}
+                    pages={this.state.results.extension.pages}
+                    onNextPage={() => this.loadResultsPage('extension', this.state.results.extension.page + 1)}
+                    onPrevPage={() => this.loadResultsPage('extension', this.state.results.extension.page - 1)}
+                />
                 <VendorsList
                     loading={this.state.loading}
                     total={this.state.results.vendor.total}

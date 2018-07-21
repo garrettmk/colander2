@@ -1,15 +1,20 @@
 import re
 from datetime import datetime
 from decimal import Decimal
+
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import reconstructor
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask_sqlalchemy import SignallingSession
+from marshmallow import Schema, fields
 
-from app import db, search
-from .core import Base, PolymorphicMixin, UpdateMixin, SearchMixin, URL, CURRENCY, quantize_decimal
+from app import db
+from core import URL, CURRENCY, quantize_decimal
+
+from .mixins import SearchMixin
 from .entities import Vendor
 from .orders import Inventory, InventoryDetails
+
 
 ########################################################################################################################
 
@@ -87,11 +92,11 @@ class QuantityMap(db.Model):
 
     @classmethod
     def __declare_last__(cls):
-        db.event.listen(SignallingSession, 'before_flush',cls._maybe_update_products)
+        db.event.listen(SignallingSession, 'before_flush', cls._maybe_update_products)
 
     @staticmethod
     def _maybe_update_products(session, context, instances):
-        qmaps = [obj for obj in session.new if isinstance(obj, QuantityMap)] +\
+        qmaps = [obj for obj in session.new if isinstance(obj, QuantityMap)] + \
                 [obj for obj in session.dirty if isinstance(obj, QuantityMap)]
 
         for qmap in qmaps:
@@ -116,7 +121,7 @@ class QuantityMap(db.Model):
 ########################################################################################################################
 
 
-class ListingDetails(db.Model, PolymorphicMixin, UpdateMixin):
+class ListingDetails(db.Model):
     """Contains a Listing's transient details, like price, rank, rating, etc."""
     id = db.Column(db.Integer, primary_key=True)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id', ondelete='CASCADE'), nullable=False)
@@ -133,7 +138,7 @@ class ListingDetails(db.Model, PolymorphicMixin, UpdateMixin):
 ########################################################################################################################
 
 
-class Listing(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
+class Listing(db.Model, SearchMixin):
     """A description of a product for sale."""
     id = db.Column(db.Integer, primary_key=True)
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendor.id', ondelete='CASCADE'), nullable=False)
@@ -150,9 +155,6 @@ class Listing(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
     last_modified = db.Column(db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
 
     __table_args__ = (UniqueConstraint('vendor_id', 'sku'),)
-    __search_fields__ = ['sku', 'title', 'brand', 'model', 'features', 'description']
-    __abbreviated__ = ['id', 'vendor_id', 'sku', 'title']
-    __extended__ = ['price', 'rank', 'rating']
     __schema_set__ = {
         'abbreviated': ('id', 'title', 'vendor_id', 'detail_url')
     }
@@ -178,6 +180,13 @@ class Listing(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
         uselist=False
     )
 
+    class QuickResult(Schema):
+        id = fields.Int()
+        type = fields.Str()
+        title = fields.Str(attribute='title')
+        image = fields.Str(attribute='image_url')
+        description = fields.Function(lambda obj: f'{obj.vendor.name if obj.vendor else obj.vendor_id} {obj.sku}')
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.suppress_guessing = False
@@ -192,9 +201,6 @@ class Listing(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
     @reconstructor
     def __init_on_load__(self):
         self.suppress_guessing = False
-
-    def encode_attribute(self, attr):
-        return super().encode_attribute(attr)
 
     # Event handlers
 
@@ -277,6 +283,3 @@ class Listing(db.Model, PolymorphicMixin, UpdateMixin, SearchMixin):
                     self.quantity = qmap.quantity
                     self.quantity_desc = qmap.text
                     break
-
-
-########################################################################################################################

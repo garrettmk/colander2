@@ -1,6 +1,8 @@
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+from core.models import ColanderJSONEncoder
+
 
 ########################################################################################################################
 
@@ -19,3 +21,5 @@ class Config:
     PA_ASSOCIATE_TAG = os.environ.get('PA_ASSOCIATE_TAG')
 
     ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL', 'http://localhost:9200')
+
+    RESTFUL_JSON = {'cls': ColanderJSONEncoder}

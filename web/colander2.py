@@ -1,5 +1,5 @@
+from pprint import pprint
 from app import create_app, db, search
-
 app = create_app()
 
 
@@ -14,6 +14,7 @@ def make_shell_context():
 
     models = {m.__name__: m for m in all_subclasses(db.Model)}
     return {
+        'pprint': pprint,
         'app': app,
         'db': db,
         'search': search,

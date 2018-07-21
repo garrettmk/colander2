@@ -1,137 +1,176 @@
-from flask import request
-from flask_restful import Resource
+import json
+import urllib.parse
+
+import sqlalchemy as sa
 from webargs import fields
-from webargs.flaskparser import use_kwargs
-from marshmallow import Schema, post_load
+from webargs.flaskparser import use_kwargs, use_args
+from marshmallow import Schema, post_load, ValidationError
+import sqlalchemy_jsonbase as sajs
 
 from app import db
-from .common import model_types, format_response
+from core import filter_with_json
+from .common import model_types, ColanderResource
 
 
 ########################################################################################################################
 
 
-class Objects(Resource):
-    """Handles creation, deletion, and filtering of objects."""
+class EncodedDict(fields.Field):
+    """A dictionary that has been URL encoded. Supports nested schemas for decoded content."""
 
-    class FilterSchema(Schema):
-        """Marshmallow schema for filter requests."""
-        pageNum = fields.Int(missing=1)
-        perPage = fields.Int(missing=10)
-        getAttrs = fields.List(fields.Str(), missing=['abbreviated'])
-        query = fields.Dict(missing=None)
+    def _deserialize(self, value, attr, data):
+        if isinstance(value, str):
+            decoded = urllib.parse.unquote(value)
+            value = json.loads(decoded)
 
+        nested = self.metadata.get('nested', None)
+        if nested:
+            value = nested.load(value).data
+
+        return value
+
+
+########################################################################################################################
+
+
+class ViewSchema(sajs.ViewSchema):
+    """Schema for the _view parameter."""
+    _page = fields.Int(missing=1)
+    _per_page = fields.Int(missing=10)
+
+
+########################################################################################################################
+
+
+class ObjectSchema(ColanderResource):
+    """Returns the schema for a object type."""
+
+    class ObjectSchemaSchema(Schema):
+        view = fields.Nested(ViewSchema, missing=dict)
         class Meta:
             strict = True
 
-        @post_load
-        def _preserve(self, data):
-            data['filters'] = {key: request.args[key] for key in request.args if key not in data}
-            return data
-
-    def build_query_from_json(self, obj_type, js):
-        """Build a SQLAlchemy query from a JSON blob."""
-        eq = [getattr(obj_type, name) == value for name, value in js.get('eq', {}).items()]
-        neq = [getattr(obj_type, name) != value for name, value in js.get('neq', {}).items()]
-        _in = [getattr(obj_type, name).in_(values) for name, values in js.get('in', {}).items()]
-        nin = [db.not_(getattr(obj_type, name).in_(values)) for name, values in js.get('nin', {}).items()]
-
-        return obj_type.query.filter(
-            *eq,
-            *neq,
-            *_in,
-            *nin
-        )
-
-    @use_kwargs(FilterSchema)
-    def get(self, type_alias, pageNum=None, perPage=None, getAttrs=None, filters={}, query=None):
-        """Filter objects of the given type using query string parameters."""
+    @use_kwargs(ObjectSchemaSchema)
+    def post(selfself, type_alias, view):
         obj_type = model_types[type_alias]
-        query = self.build_query_from_json(obj_type, query) if query else obj_type.query.filter_by(**filters)
-        page = query.paginate(page=pageNum, per_page=perPage)
+        return obj_type.json_schema(**view)
 
-        if getAttrs == ['all']:
-            items = [m.as_json() for m in page.items]
-        elif getAttrs == ['abbreviated']:
-            items = [m.abbr_json() for m in page.items]
-        else:
-            items = [m.as_json(*getAttrs) for m in page.items]
 
+########################################################################################################################
+
+
+class ObjectFilter(ColanderResource):
+    """Filters and returns objects using JSON queries."""
+    
+    class FilterSchema(Schema):
+        query = fields.Dict(missing=dict)
+        view = fields.Nested(ViewSchema, missing=dict)
+        
+        class Meta:
+            strict = True
+            
+    @use_kwargs(FilterSchema)
+    def post(self, type_alias, query, view):
+        obj_type = model_types[type_alias]
+        query = filter_with_json(obj_type.query, query)
+        page = query.paginate(page=view['context']['_page'], per_page=view['context']['_per_page'])
+        print(view)
+        items = [m.to_json(**view) for m in page.items]
         return {
             'total': page.total,
             'page': page.page,
             'pages': page.pages,
             'per_page': page.per_page,
-            'items': items
-        }
-
-    def post(self, type_alias):
-        """Create an object using POST data."""
-        data = dict(request.json)
-        obj_type = model_types[type_alias]
-
-        obj = obj_type()
-        obj.update(data)
-        db.session.add(obj)
-        db.session.commit()
-
-        return {
-            'status': 'ok',
-            'id': obj.id
-        }
-
-    def delete(self, type_alias):
-        """Delete objects specified in the DELETE data."""
-        ids = request.json['ids']
-        obj_type = model_types[type_alias]
-
-        try:
-            obj_type.query.filter(obj_type.id.in_(ids)).delete(synchronize_session=False)
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            return {
-                'status': 'error',
-                'exception': type(e).__name__,
-                'message': str(e)
-            }
-
-        return {
-            'status': 'ok'
+            'items': items,
+            'schema': obj_type.json_schema(**view)
         }
 
 
 ########################################################################################################################
 
 
-class Attributes(Resource):
-    """Provides low-level get and set functionality for database models."""
-
-    def get(self, type_alias, obj_id):
-        attrs = [a for a in request.args] or ['abbreviated']
-
+class ObjectUpdater(ColanderResource):
+    """Updates all objects that match the query."""
+    
+    class UpdateSchema(Schema):
+        query = fields.Dict(required=True)
+        data = fields.Dict(required=True)
+        
+        class Meta:
+            strict = True
+            
+    @use_kwargs(UpdateSchema)
+    def post(self, type_alias, query, data):
         obj_type = model_types[type_alias]
+        loaded = obj_type.Schema().load(data, partial=True)
 
-        obj = obj_type.query.filter_by(id=obj_id).one()
+        if loaded.errors:
+            return {'errors': loaded.errors}
 
-        if attrs == ['abbreviated']:
-            response = obj.abbr_json()
-        elif attrs == ['all']:
-            response = obj.as_json()
-        else:
-            response = obj.as_json(*attrs)
+        query = filter_with_json(obj_type.query, query)
 
-        return response
+        for obj in query.all():
+            obj.update(loaded.data)
 
-    def post(self, obj_type, obj_id):
-        """Modify attributes on an object."""
-        update = dict(request.json)
-        obj_type = model_types[obj_type]
-        obj = obj_type.query.filter_by(id=obj_id).one()
+        db.session.commit()
+        return {'status': 'ok'}
 
-        obj.update(update)
+
+########################################################################################################################
+
+
+class ObjectCreator(ColanderResource):
+    """Creates an object and returns it's ID."""
+    
+    class CreatorSchema(Schema):
+        data = fields.Dict(required=True)
+        
+        class Meta:
+            strict = True
+            
+    @use_kwargs(CreatorSchema)
+    def post(self, type_alias, data):
+        obj_type = model_types[type_alias]
+        errors = obj_type.Schema().validate(data, partial=False)
+        
+        if errors:
+            return {'errors': errors}
+        
+        obj = obj_type.from_json(data)
+        db.session.add(obj)
+
+        try:
+            db.session.commit()
+        except sa.exc.IntegrityError as exc:
+            db.session.rollback()
+
+            try:
+                error_key = [key for key in data if f'\"entity_{key}_key\"' in str(exc)][0]
+            except IndexError:
+                raise exc
+
+            return {'errors': {error_key: str(exc)}}
+        
+        return {'id': obj.id}
+
+
+########################################################################################################################
+
+
+class ObjectDeleter(ColanderResource):
+    """Deletes all objects that match the query."""
+
+    class DeleterSchema(Schema):
+        query = fields.Dict(required=True)
+
+        class Meta:
+            strict = True
+
+    @use_kwargs(DeleterSchema)
+    def post(self, type_alias, query):
+        obj_type = model_types[type_alias]
+        query = filter_with_json(obj_type.query, query)
+        query.delete()
         db.session.commit()
 
-        return {
-            'status': 'ok'
-        }
+        return {'status': 'ok'}

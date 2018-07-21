@@ -1,0 +1,6 @@
+[submodule "web/lib/xmallow"]
+	path = web/lib/xmallow
+	url = https://github.com/garrettmk/xmallow
+[submodule "web/lib/sqlalchemy-jsonbase"]
+	path = web/lib/sqlalchemy-jsonbase
+	url = https://github.com/garrettmk/sqlalchemy-jsonbase

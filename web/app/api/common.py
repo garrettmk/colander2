@@ -1,5 +1,7 @@
 import functools
 
+from flask_restful import Resource
+
 from app import db
 
 
@@ -15,16 +17,20 @@ def format_response(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            response = func(*args, **kwargs)
-        except Exception as e:
             return {
-                'status': 'error',
-                'exception': type(e).__name__,
-                'message': str(e)
+                **func(*args, **kwargs)
             }
-
-        return {
-            'status': 'ok',
-            **response
-        }
+        except Exception as e:
+            raise e
+            return {
+                'error': {
+                    'exception': type(e).__name__,
+                    'message': str(e)
+                }
+            }
     return wrapper
+
+
+class ColanderResource(Resource):
+    """Base class for all API resources."""
+    method_decorators = [format_response]

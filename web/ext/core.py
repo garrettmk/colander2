@@ -1,12 +1,13 @@
-import dramatiq
 import importlib
 import multiprocessing as mp
 
+import dramatiq
+import marshmallow as mm
+from flask import current_app, has_app_context
 from scrapy import signals
 from scrapy.crawler import CrawlerProcess, Crawler
 from scrapy.settings import Settings
 
-from flask import has_app_context
 from app import create_app
 from tasks.ops.listings import import_listing_default
 app = create_app()
@@ -52,24 +53,6 @@ def ext_actor(fn=None, **options):
 ########################################################################################################################
 
 
-class ExtActor(dramatiq.GenericActor):
-    """A base class for extension actors."""
-
-    class Meta:
-        abstract = True
-        queue_name = 'ext'
-        store_results = True
-        min_backoff = 5000
-        max_backoff = 300000
-
-        @staticmethod
-        def retry_when(retries_so_far, exception):
-            return retries_so_far < 10
-
-
-########################################################################################################################
-
-
 def _launch_spider(module_name, urls, spider_name='spider', spider_options=None, importer='import_spider_item'):
     module = importlib.import_module('ext.' + module_name)
     spider = getattr(module, spider_name)
@@ -94,3 +77,42 @@ def launch_spider(module_name, urls, **kwargs):
     proc = mp.Process(target=_launch_spider, args=(module_name, urls), kwargs=kwargs)
     proc.start()
     return proc.pid
+
+
+########################################################################################################################
+
+
+class ExtActor(dramatiq.GenericActor):
+    """A base class for extension actors."""
+    abstract = True
+    public = False
+
+    class Meta:
+        abstract = True
+        queue_name = 'ext'
+        store_results = True
+        min_backoff = 5000
+        max_backoff = 300000
+
+        @staticmethod
+        def retry_when(retries_so_far, exception):
+            return retries_so_far < 10
+
+    class Schema(mm.Schema):
+        """Schema for this actor's parameters."""
+
+    def __call__(self, **params):
+        return self.validate_and_perform(**params)
+
+    @classmethod
+    def validate(cls, **params):
+        """Validate params against the actor's schema."""
+        return cls.Schema().validate(params)
+
+    def validate_and_perform(self, **params):
+        """Validates the parameters and performs the action."""
+        loaded = self.Schema().load(params)
+        if loaded.errors:
+            raise mm.ValidationError(message=loaded.errors)
+
+        return self.perform(**params)
