@@ -1,3 +1,6 @@
+[submodule "web/lib/amazonmws"]
+    path = web/lib/amazonmws
+    url = https://github.com/garrettmk/amazonmws
 [submodule "web/lib/xmallow"]
 	path = web/lib/xmallow
 	url = https://github.com/garrettmk/xmallow
