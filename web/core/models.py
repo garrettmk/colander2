@@ -150,10 +150,6 @@ class Base(jb.JsonMixin, Model):
     extra = sa.Column(JSONB, default=dict, nullable=False)
     type = sa.Column(sa.String(64), nullable=False)
 
-    class Schema(Schema):
-        type = fields.Function(lambda obj: obj.type.lower(), dump_only=True)
-        extra = fields.Dict()
-
     def __init__(self, *args, **kwargs):
         self.extra = {}
         super().__init__(*args, **kwargs)

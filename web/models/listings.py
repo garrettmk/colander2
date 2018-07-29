@@ -2,11 +2,11 @@ import re
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import UniqueConstraint
-from sqlalchemy.orm import reconstructor
-from sqlalchemy.ext.hybrid import hybrid_property
-from flask_sqlalchemy import SignallingSession
-from marshmallow import Schema, fields
+import sqlalchemy as sa
+import sqlalchemy_jsonbase as jb
+import marshmallow as mm
+import marshmallow.fields as mmf
+import flask_sqlalchemy
 
 from app import db
 from core import URL, CURRENCY, quantize_decimal
@@ -19,7 +19,7 @@ from .orders import Inventory, InventoryDetails
 ########################################################################################################################
 
 
-def detail_property(name):
+def detail_property(name, **kwargs):
     """Creates a property that is a pass-through to the most recent detail object. Will not overwrite committed
      objects, but will create a new object."""
 
@@ -46,10 +46,10 @@ def detail_property(name):
             ListingDetails.timestamp.desc()
         ).limit(1).label(name)
 
-    return hybrid_property(fget=getter, fset=setter, expr=expr)
+    return jb.hybrid_property(fset=setter, expr=expr, **kwargs)(getter)
 
 
-def inventory_property(name):
+def inventory_property(name, **kwargs):
     """A shortcut for using detail_property with InventoryDetails."""
 
     def getter(self):
@@ -75,7 +75,7 @@ def inventory_property(name):
             InventoryDetails.timestamp.desc()
         ).limit(1).label(name)
 
-    return hybrid_property(fget=getter, fset=setter, expr=expr)
+    return jb.hybrid_property(fset=setter, expr=expr, **kwargs)(getter)
 
 
 ########################################################################################################################
@@ -83,16 +83,16 @@ def inventory_property(name):
 
 class QuantityMap(db.Model):
     """A mapping of a quantity and its textual representation."""
-    id = db.Column(db.Integer, primary_key=True)
-    quantity = db.Column(db.Integer, nullable=False, default=1)
-    text = db.Column(db.String(64), nullable=False, unique=True)
+    id = jb.Column(db.Integer, primary_key=True, label='QuantityMap ID')
+    quantity = jb.Column(db.Integer, nullable=False, default=1, label='Quantity')
+    text = jb.Column(db.String(64), nullable=False, unique=True, label='Description')
 
     def __repr__(self):
         return f'<QuantityMap {self.text} = {self.quantity}>'
 
     @classmethod
     def __declare_last__(cls):
-        db.event.listen(SignallingSession, 'before_flush', cls._maybe_update_products)
+        db.event.listen(flask_sqlalchemy.SignallingSession, 'before_flush', cls._maybe_update_products)
 
     @staticmethod
     def _maybe_update_products(session, context, instances):
@@ -123,16 +123,16 @@ class QuantityMap(db.Model):
 
 class ListingDetails(db.Model):
     """Contains a Listing's transient details, like price, rank, rating, etc."""
-    id = db.Column(db.Integer, primary_key=True)
-    listing_id = db.Column(db.Integer, db.ForeignKey('listing.id', ondelete='CASCADE'), nullable=False)
-    timestamp = db.Column(db.DateTime, default=lambda: datetime.utcnow())
-    price = db.Column(CURRENCY)
-    rank = db.Column(db.Integer)
-    rating = db.Column(db.Float)
+    id = jb.Column(db.Integer, primary_key=True, label='ListingDetails ID')
+    listing_id = jb.Column(db.Integer, db.ForeignKey('listing.id', ondelete='CASCADE'), nullable=False, label='Listing ID')
+    timestamp = jb.Column(db.DateTime, default=lambda: datetime.utcnow(), label='Timestamp')
+    price = jb.Column(CURRENCY, label='Price')
+    rank = jb.Column(db.Integer, label='Rank')
+    rating = jb.Column(db.Float, label='Rating')
 
-    listing = db.relationship('Listing', back_populates='details')
+    listing = jb.relationship('Listing', back_populates='details', label='Listing')
 
-    __table_args__ = (UniqueConstraint('timestamp', 'listing_id'),)
+    __table_args__ = (sa.UniqueConstraint('timestamp', 'listing_id'),)
 
 
 ########################################################################################################################
@@ -140,52 +140,52 @@ class ListingDetails(db.Model):
 
 class Listing(db.Model, SearchMixin):
     """A description of a product for sale."""
-    id = db.Column(db.Integer, primary_key=True)
-    vendor_id = db.Column(db.Integer, db.ForeignKey('vendor.id', ondelete='CASCADE'), nullable=False)
-    sku = db.Column(db.String(64), nullable=False)
-    title = db.Column(db.Text)
-    brand = db.Column(db.Text)
-    model = db.Column(db.Text)
-    quantity = db.Column(db.Integer, default=1)
-    quantity_desc = db.Column(db.Text)
-    features = db.Column(db.Text)
-    description = db.Column(db.Text)
-    detail_url = db.Column(URL)
-    image_url = db.Column(URL)
-    last_modified = db.Column(db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
+    id = jb.Column(db.Integer, primary_key=True, label='Listing ID')
+    vendor_id = jb.Column(db.Integer, db.ForeignKey('vendor.id', ondelete='CASCADE'), nullable=False, label='Vendor ID')
+    sku = jb.Column(db.String(64), nullable=False, label='SKU')
+    title = jb.Column(db.Text, label='Title')
+    brand = jb.Column(db.Text, label='Brand')
+    model = jb.Column(db.Text, label='Model')
+    quantity = jb.Column(db.Integer, default=1, label='Quantity')
+    quantity_desc = jb.Column(db.Text, label='Quantity Description')
+    features = jb.Column(db.Text, label='Features')
+    description = jb.Column(db.Text, label='Description')
+    detail_url = jb.Column(URL, label='Detail page URL', format='url')
+    image_url = jb.Column(URL, label='Image URL', format='url')
+    last_modified = jb.Column(db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow(), label='Last modified')
 
-    __table_args__ = (UniqueConstraint('vendor_id', 'sku'),)
-    __schema_set__ = {
-        'abbreviated': ('id', 'title', 'vendor_id', 'detail_url')
-    }
+    __table_args__ = (sa.UniqueConstraint('vendor_id', 'sku'),)
 
     # Pass-through properties
-    price = detail_property('price')
-    rank = detail_property('rank')
-    rating = detail_property('rating')
+    price = detail_property('price', field=mmf.Decimal, label='Price')
+    rank = detail_property('rank', field=mmf.Integer, label='Rank')
+    rating = detail_property('rating', field=mmf.Float, label='Rating', format='percent')
 
-    details = db.relationship(
+    details = jb.relationship(
         'ListingDetails',
         order_by=ListingDetails.timestamp.asc(),
         back_populates='listing',
-        passive_deletes=True
+        passive_deletes=True,
+        uselist=True,
+        label='Detail history'
     )
 
     # Relationships
-    vendor = db.relationship('Vendor', back_populates='listings')
-    inventories = db.relationship('Inventory', back_populates='listing')
-    inventory = db.relationship(
+    vendor = jb.relationship('Vendor', back_populates='listings', label='Vendor')
+    inventories = jb.relationship('Inventory', back_populates='listing', uselist=True, label='Inventories')
+    inventory = jb.relationship(
         'Inventory',
         primaryjoin='and_(Inventory.listing_id == Listing.id, Inventory.owner_id == Listing.vendor_id)',
-        uselist=False
+        uselist=False,
+        label='Inventory'
     )
 
-    class QuickResult(Schema):
-        id = fields.Int()
-        type = fields.Str()
-        title = fields.Str(attribute='title')
-        image = fields.Str(attribute='image_url')
-        description = fields.Function(lambda obj: f'{obj.vendor.name if obj.vendor else obj.vendor_id} {obj.sku}')
+    class QuickResult(mm.Schema):
+        id = mmf.Int()
+        type = mmf.Str()
+        title = mmf.Str(attribute='title')
+        image = mmf.Str(attribute='image_url')
+        description = mmf.Function(lambda obj: f'{obj.vendor.name if obj.vendor else obj.vendor_id} {obj.sku}')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -198,7 +198,7 @@ class Listing(db.Model, SearchMixin):
         vnd_name = self.vendor.name if self.vendor else None
         return f'<{type(self).__name__} {vnd_name} {self.sku}>'
 
-    @reconstructor
+    @sa.orm.reconstructor
     def __init_on_load__(self):
         self.suppress_guessing = False
 
@@ -206,7 +206,7 @@ class Listing(db.Model, SearchMixin):
 
     @classmethod
     def __declare_last__(cls):
-        db.event.listen(SignallingSession, 'before_flush', cls._maybe_guess_quantity)
+        db.event.listen(flask_sqlalchemy.SignallingSession, 'before_flush', cls._maybe_guess_quantity)
 
     @staticmethod
     def _maybe_guess_quantity(session, context, instances):
@@ -226,7 +226,7 @@ class Listing(db.Model, SearchMixin):
 
     # Hybrid properties
 
-    @hybrid_property
+    @sa.ext.hybrid.hybrid_property
     def estimated_cost(self):
         """The price plus tax and shipping, based on the vendor's averages."""
         if self.price is not None:
@@ -252,7 +252,7 @@ class Listing(db.Model, SearchMixin):
             ListingDetails.timestamp.desc()
         ).limit(1).label('estimated_cost')
 
-    @hybrid_property
+    @sa.ext.hybrid.hybrid_property
     def estimated_unit_cost(self):
         """The estimated cost divided by the listing quantity."""
         cost = self.estimated_cost

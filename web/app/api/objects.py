@@ -7,9 +7,10 @@ from webargs.flaskparser import use_kwargs, use_args
 from marshmallow import Schema, post_load, ValidationError
 import sqlalchemy_jsonbase as sajs
 
-from app import db
-from core import filter_with_json
-from .common import model_types, ColanderResource
+import app
+import core
+import models
+from .common import ColanderResource
 
 
 ########################################################################################################################
@@ -51,9 +52,9 @@ class ObjectSchema(ColanderResource):
             strict = True
 
     @use_kwargs(ObjectSchemaSchema)
-    def post(selfself, type_alias, view):
-        obj_type = model_types[type_alias]
-        return obj_type.json_schema(**view)
+    def post(selfself, type_, view):
+        obj_type = getattr(models, type_)
+        return obj_type.json_schema(view)
 
 
 ########################################################################################################################
@@ -65,24 +66,25 @@ class ObjectFilter(ColanderResource):
     class FilterSchema(Schema):
         query = fields.Dict(missing=dict)
         view = fields.Nested(ViewSchema, missing=dict)
+        schema = fields.String(missing='__schema__')
         
         class Meta:
             strict = True
             
     @use_kwargs(FilterSchema)
-    def post(self, type_alias, query, view):
-        obj_type = model_types[type_alias]
-        query = filter_with_json(obj_type.query, query)
+    def post(self, type_, query, view, schema):
+        obj_type = getattr(models, type_)
+        query = core.filter_with_json(obj_type.query, query)
+
         page = query.paginate(page=view['context']['_page'], per_page=view['context']['_per_page'])
-        print(view)
-        items = [m.to_json(**view) for m in page.items]
+        items = [m.to_json(view, _schema=schema) for m in page.items]
         return {
             'total': page.total,
             'page': page.page,
             'pages': page.pages,
             'per_page': page.per_page,
             'items': items,
-            'schema': obj_type.json_schema(**view)
+            'schema': obj_type.json_schema(view)
         }
 
 
@@ -100,19 +102,19 @@ class ObjectUpdater(ColanderResource):
             strict = True
             
     @use_kwargs(UpdateSchema)
-    def post(self, type_alias, query, data):
-        obj_type = model_types[type_alias]
+    def post(self, type_, query, data):
+        obj_type = getattr(models, type_)
         loaded = obj_type.Schema().load(data, partial=True)
 
         if loaded.errors:
             return {'errors': loaded.errors}
 
-        query = filter_with_json(obj_type.query, query)
+        query = core.filter_with_json(obj_type.query, query)
 
         for obj in query.all():
             obj.update(loaded.data)
 
-        db.session.commit()
+        app.db.session.commit()
         return {'status': 'ok'}
 
 
@@ -129,23 +131,24 @@ class ObjectCreator(ColanderResource):
             strict = True
             
     @use_kwargs(CreatorSchema)
-    def post(self, type_alias, data):
-        obj_type = model_types[type_alias]
-        errors = obj_type.Schema().validate(data, partial=False)
+    def post(self, type_, data):
+        obj_type = getattr(models, type_)
+        schema = obj_type.__schema__()
+        errors = schema.validate(data, partial=False)
         
         if errors:
             return {'errors': errors}
         
         obj = obj_type.from_json(data)
-        db.session.add(obj)
+        app.db.session.add(obj)
 
         try:
-            db.session.commit()
+            app.db.session.commit()
         except sa.exc.IntegrityError as exc:
-            db.session.rollback()
+            app.db.session.rollback()
 
             try:
-                error_key = [key for key in data if f'\"entity_{key}_key\"' in str(exc)][0]
+                error_key = [key for key in schema.fields if f'\"{key}\"' in str(exc) or f'\"entity_{key}_key\"' in str(exc)][0]
             except IndexError:
                 raise exc
 
@@ -167,10 +170,10 @@ class ObjectDeleter(ColanderResource):
             strict = True
 
     @use_kwargs(DeleterSchema)
-    def post(self, type_alias, query):
-        obj_type = model_types[type_alias]
-        query = filter_with_json(obj_type.query, query)
+    def post(self, type_, query):
+        obj_type = getattr(models, type_)
+        query = core.filter_with_json(obj_type.query, query)
         query.delete()
-        db.session.commit()
+        app.db.session.commit()
 
         return {'status': 'ok'}

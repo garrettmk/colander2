@@ -1,4 +1,5 @@
 import importlib
+import marshmallow as mm
 
 from dramatiq import GenericActor
 from sqlalchemy.orm import reconstructor
@@ -20,6 +21,12 @@ class Extension(db.Model, SearchMixin):
     exports = db.Column(JSONB, default=dict, nullable=False)
 
     tasks = db.relationship('Task', back_populates='extension')
+
+    class QuickResult(mm.Schema):
+        id = mm.fields.Int()
+        type = mm.fields.Str()
+        title = mm.fields.Str(attribute='name')
+        description = mm.fields.Function(lambda obj: f'ext.{obj.module}')
 
     def __repr__(self):
         name = self.name or self.module or self.id

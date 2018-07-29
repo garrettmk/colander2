@@ -4,13 +4,13 @@ from webargs import fields
 from webargs.flaskparser import use_kwargs
 from marshmallow import Schema
 
-from core import Base
-from models.mixins import SearchMixin
-from .common import model_types, ColanderResource
+import core
+import models
+from .common import ColanderResource
 
 
-searchable_models = [m.__name__.lower() for m in Base.all_subclasses() if issubclass(m, SearchMixin)]
-quick_models = [m.__name__.lower() for m in Base.all_subclasses() if hasattr(m, 'QuickResult')]
+searchable_models = [m.__name__ for m in core.Base.all_subclasses() if issubclass(m, models.mixins.SearchMixin)]
+quick_models = [m.__name__ for m in core.Base.all_subclasses() if hasattr(m, 'QuickResult')]
 
 
 ########################################################################################################################
@@ -36,7 +36,7 @@ class TextSearch(ColanderResource):
         }
 
         for type_name in types:
-            model_type = model_types[type_name]
+            model_type = getattr(models, type_name)
             results, total = model_type.search(query, page, perPage)
 
             response['total'] += total
@@ -69,16 +69,16 @@ class QuickSearch(ColanderResource):
         response = {}
 
         for type_name in types:
-            model_type = model_types[type_name]
+            model_type = getattr(models, type_name)
             results, total = model_type.search(query, per_page=limit)
             if not total:
                 continue
 
             response[type_name] = {
                 'name': model_type.__name__,
-                'results': [m.to_json(_schema='QuickResult') for m in results]
+                'results': [m.to_json(schema_attr='QuickResult') for m in results]
             }
 
-        response.pop('entity', None)
+        response.pop('Entity', None)
 
         return response

@@ -152,7 +152,7 @@ class ObjectSelector extends React.Component {
 
         Colander.filter(type, {
             query: { id: value },
-            view: { _schema: 'QuickResult'},
+            view: { _schema: 'Preview'},
 
             onSuccess: results => this.setState({ loading: false, selected: results.items ? results.items[0] : {} }),
             onFailure: error => this.setState({ loading: false, selected: {} })
@@ -172,7 +172,7 @@ class ObjectSelector extends React.Component {
                         <Table.Cell style={{ width: '80px' }}>
                             <Image size={'tiny'} src={imageUrl}/>
                         </Table.Cell>
-                        <Table.Cell rowspan={2} singleline>
+                        <Table.Cell rowSpan={2} singleline>
                             {searching
                                 ? <Search
                                     fluid
@@ -220,6 +220,14 @@ function Control (props) {
     const { schema, required, onChange, value, error } = props;
     const handleChange = onChange ? (v) => onChange(v) : undefined;
 
+    if (schema.idtype)
+        return <ObjectSelector
+            type={schema.idtype}
+            onChange={handleChange}
+            value={value}
+            error
+        />;
+
     switch (schema.type) {
         case 'array':
             return <ListEditor
@@ -228,13 +236,8 @@ function Control (props) {
                 error
             />;
 
-        case 'objectId':
-            return <ObjectSelector
-                type={schema['class']}
-                onChange={handleChange}
-                value={value}
-                error
-            />;
+        case 'object':
+            return <pre>{value ? JSON.stringify(value, null, '  ') : '(none)'}</pre>;
 
         case 'number':
         case 'string':
@@ -256,6 +259,7 @@ function Control (props) {
                 value={value}
                 transparent
                 disabled={!onChange}
+                onChange={(e, { value }) => handleChange(value)}
                 {...format}
             />;
 
@@ -282,8 +286,14 @@ Control.propTypes = {
 
 export default function Autoform (props) {
 
-    const { schema, data, onChange, tablerows } = props;
-    const { properties, required } = schema;
+    const { schema, data, onChange, tablerows, only, exclude } = props;
+    const { properties = {}, required = [] } = schema;
+    const keys = only ? only : Object.keys(properties).filter(key => !exclude.includes(key));
+    const fields = keys.map(key => ({
+        key: key,
+        schema: properties[key],
+        value: data[key]
+    }));
 
     const handleChange = field => (
         onChange
@@ -291,28 +301,22 @@ export default function Autoform (props) {
             : undefined
     );
 
-    const rows = Object.keys(properties).map(field => {
-        const fieldSchema = properties[field];
-        const { title, name } = fieldSchema;
-        const { [field]: value } = data;
-
-        return (
-            <Table.Row key={field}>
+    const rows = fields.map(({ key, schema = {}, value }) => (
+            <Table.Row key={key}>
                 <Table.Cell>
                     <Header size={'tiny'}>
-                        {name || title}
+                        {schema.name || schema.title || schema.field}
                     </Header>
                 </Table.Cell>
                 <Table.Cell>
                     <Control
-                        schema={fieldSchema}
+                        schema={schema}
                         value={value}
-                        onChange={handleChange(field)}
+                        onChange={handleChange(key)}
                     />
                 </Table.Cell>
             </Table.Row>
-        )
-    });
+    ));
 
     if (tablerows)
         return <React.Fragment>{rows}</React.Fragment>;
@@ -330,5 +334,12 @@ export default function Autoform (props) {
 Autoform.propTypes = {
     schema: PropTypes.object.isRequired,
     data: PropTypes.object.isRequired,
-    onChange: PropTypes.func
+    onChange: PropTypes.func,
+    error: PropTypes.object,
+    only: PropTypes.arrayOf(PropTypes.string),
+    exclude: PropTypes.arrayOf(PropTypes.string)
+};
+
+Autoform.defaultProps = {
+    exclude: []
 };

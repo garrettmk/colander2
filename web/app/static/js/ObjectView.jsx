@@ -1,9 +1,18 @@
 import React from "react";
 import { Grid, Segment, Image, Header, Button, Message, Table, Tab, Divider, List, Pagination,
-Checkbox, Select, Input, Icon, Search, Item } from "semantic-ui-react";
+Checkbox, Select, Input, Icon, Search, Item, Loader } from "semantic-ui-react";
 
 import { asCount, asCurrency, asPercent } from "./App";
-import {ObjectContext, CollectionContext, ObjectProvider, CollectionProvider, QueryProvider, QueryContext} from "./Objects";
+import {
+    ObjectContext,
+    PreviewContext,
+    CollectionContext,
+    ObjectProvider,
+    CollectionProvider,
+    QueryProvider,
+    QueryContext,
+    PreviewProvider
+} from "./Objects";
 import update from "immutability-helper/index";
 import forms from "./Forms";
 import Autoform from "./Autoform";
@@ -14,69 +23,10 @@ import Colander from "./colander";
 
 
 const defaultImages = {
-    vendor: 'https://imgplaceholder.com/128x128/cccccc/757575/fa-globe',
-    customer: 'https://imgplaceholder.com/128x128/cccccc/757575/ion-android-person',
-    extension: 'https://imgplaceholder.com/128x128/cccccc/757575/fa-gears'
+    Vendor: 'https://imgplaceholder.com/128x128/cccccc/757575/fa-globe',
+    Customer: 'https://imgplaceholder.com/128x128/cccccc/757575/ion-android-person',
+    Extension: 'https://imgplaceholder.com/128x128/cccccc/757575/fa-gears'
 };
-
-
-const detailFormats = {
-    listing: {
-        id: { label: 'ID', attr: 'id' },
-        header: { label: 'header', attr: 'title' },
-        subheader: { label: 'subheader', attr: 'detail_url' },
-        image_url: { label: 'Image URL', attr: 'image_url', value: lst => lst.vendor ? lst.vendor.name : 'n/a' },
-        sku: { label: 'SKU', attr: 'sku' },
-        brand: { label: 'Brand', attr: 'brand' },
-        model: { label: 'Model', attr: 'model' },
-        price: { label: 'Price', attr: 'price', format: { textAlign: 'right' }, value: lst => asCurrency(lst.price) },
-        quantity: { label: 'Quantity', attr: 'quantity', value: lst => asCount(lst.quantity) },
-        category: { label: 'Category', value: lst => lst.extra ? lst.extra.category : 'n/a' },
-        rank: { label: 'Rank', attr: 'rank', value: lst => asCount(lst.rank) },
-        rating: { label: 'Rating', attr: 'rating', value: lst => asPercent(lst.rating) },
-        image: { label: 'Image', value: lst => <Image size={'tiny'} src={lst.image_url}/> },
-        title: { label: 'Title', attr: 'title' }
-    },
-    vendor: {
-        id: { label: 'ID', attr: 'id' },
-        header: { label: 'header', attr: 'name' },
-        subheader: { label: 'subheader', attr: 'url' },
-        image_url: { label: 'Image URL', attr: 'image_url', value: vnd => vnd.image_url || defaultImages.vendor },
-        url: { label: 'URL', attr: 'url', value: vnd => vnd.url || '(no website )' },
-        extension: { label: 'Extension', attr: 'ext_id', value: vnd => vnd.ext ? vnd.ext.name : 'n/a' },
-        avg_shipping: { label: 'Avg. Shipping', attr: 'avg_shipping', value: vnd => asPercent(vnd.avg_shipping)},
-        avg_tax: { label: 'Avg. Tax', attr: 'avg_tax', value: vnd => asPercent(vnd.avg_tax)},
-        listings: { label: 'Total listings', value: vnd => vnd.listings ? asCount(vnd.listings.total) : 'n/a'},
-    },
-    extension: {
-        header: { label: 'header', attr: 'name', value: ext => ext.name || '(unnamed)' },
-        subheader: { label: 'subheader', attr: 'module', value: ext => 'ext.' + ext.module },
-        image_url: { label: 'Image URL', value: ext => defaultImages.extension },
-        url: { label: 'URL', value: ext => 'ext.' + ext.module },
-        exports: { label: 'Exports', value: ext => ext.exports ? <List items={Object.keys(ext.exports)}/> : 'n/a' },
-    }
-};
-
-function formatObject(obj = {}, options) {
-    const { type = obj.type, only = Object.keys(detailFormats[type]) } = options;
-
-    if (!type || !obj)
-        return {};
-
-    const colFormats = detailFormats[type];
-    let formatted = {};
-    only.map(col => {
-        const { label, attr, value, format = {} } = colFormats[col];
-        formatted[col] = {
-            label,
-            attr,
-            format,
-            value: value ? value(obj) : obj[attr]
-        }
-    });
-
-    return formatted;
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,30 +98,29 @@ const headerImgOpts = {
 };
 
 
-function ObjectHeader (props) {
+function ObjectHeader () {
     return (
-        <ObjectContext.Consumer>
-            {({ type, original }) => {
-                if (!type || !original)
-                    return <React.Fragment/>;
-
-                const {image_url, url, header, subheader} = formatObject(original, {
-                    only: ['image_url', 'url', 'header', 'subheader']
-                });
-
-                return (
-                    <React.Fragment>
-                        <Image src={image_url.value} href={url.value} {...headerImgOpts}/>
-                        <Header {...headerOpts}>
-                            {header.value}
-                            <Header.Subheader>
-                                {subheader.value}
-                            </Header.Subheader>
-                        </Header>
-                    </React.Fragment>
-                )
+        <PreviewContext.Consumer>
+            {({ loading, preview }) => {
+                if (loading) {
+                    return <Loader active={true}/>;
+                } else if (!preview) {
+                    return <Message error>No data :(</Message>;
+                } else {
+                    return (
+                        <React.Fragment>
+                            <Image src={preview.image || defaultImages[preview.type]} href={preview.url} {...headerImgOpts}/>
+                            <Header {...headerOpts}>
+                                {preview.title}
+                                <Header.Subheader>
+                                    <a href={preview.url} target={'_blank'}>{preview.description} <Icon name={'external'}/></a>
+                                </Header.Subheader>
+                            </Header>
+                        </React.Fragment>
+                    )
+                }
             }}
-        </ObjectContext.Consumer>
+        </PreviewContext.Consumer>
     )
 }
 
@@ -277,7 +226,7 @@ export class ObjectSummary extends React.Component {
                     return (
                         <Segment raised loading={loading}>
                             <div style={{ position: 'relative' }}>
-                                <ObjectHeader type={type}/>
+                                <ObjectHeader/>
                                 {readonly || headeronly || !edit
                                     ? <React.Fragment/>
                                     : <Button
@@ -287,16 +236,16 @@ export class ObjectSummary extends React.Component {
                                     />
                                 }
                             </div>
-                            {headeronly
-                                ? <React.Fragment/>
-                                : <React.Fragment>
-                                    <Divider/>
-                                    {editing
-                                        ? <ObjectDetailsEditor/>
-                                        : <ObjectSummaryTable only={only}/>
-                                    }
-                                </React.Fragment>
-                            }
+                            {/*{headeronly*/}
+                                {/*? <React.Fragment/>*/}
+                                {/*: <React.Fragment>*/}
+                                    {/*<Divider/>*/}
+                                    {/*{editing*/}
+                                        {/*? <ObjectDetailsEditor/>*/}
+                                        {/*: <ObjectSummaryTable only={only}/>*/}
+                                    {/*}*/}
+                                {/*</React.Fragment>*/}
+                            {/*}*/}
                         </Segment>
                     )
                 }}
@@ -562,27 +511,27 @@ export default function ObjectView (props) {
     let view = {};
     let column1, column2;
     switch (type) {
-        case 'vendor':
+        case 'Vendor':
             view = { ext: { _exclude: []} };
             column1 = (
                 <React.Fragment>
                     <ObjectSummary
                         only={['id', 'extension', 'avg_shipping', 'avg_tax']}
                     />
-                    <ObjectProvider child={'ext'}>
-                        <ActionSender/>
-                    </ObjectProvider>
+                    {/*<ObjectProvider child={'ext'}>*/}
+                        {/*<ActionSender/>*/}
+                    {/*</ObjectProvider>*/}
                 </React.Fragment>
             );
             column2 = (
                 <React.Fragment>
-                    <QueryProvider type={'listing'} query={{ vendor_id: id }} view={{ vendor: { _only: ['name'] } }}>
+                    <QueryProvider type={'Listing'} query={{ vendor_id: id }} view={{ vendor: { _only: ['name'] } }}>
                         <QueryContext.Consumer>
                             {({ type, query, view }) => (
                                 <CollectionProvider type={type} query={query} view={view}>
-                                    <ObjectTable
-                                        columns={['select', 'sku', 'image', 'title', 'price']}
-                                    />
+                                    {/*<ObjectTable*/}
+                                        {/*columns={['select', 'sku', 'image', 'title', 'price']}*/}
+                                    {/*/>*/}
                                 </CollectionProvider>
                             )}
                         </QueryContext.Consumer>
@@ -594,14 +543,16 @@ export default function ObjectView (props) {
 
     return (
         <ObjectProvider type={type} id={id} view={view}>
-            <Grid columns={2}>
-                <Grid.Column width={4}>
-                    {column1}
-                </Grid.Column>
-                <Grid.Column width={12}>
-                    {column2}
-                </Grid.Column>
-            </Grid>
+            <PreviewProvider type={type} id={id}>
+                <Grid columns={2}>
+                    <Grid.Column width={4}>
+                        {column1}
+                    </Grid.Column>
+                    <Grid.Column width={12}>
+                        {column2}
+                    </Grid.Column>
+                </Grid>
+            </PreviewProvider>
         </ObjectProvider>
     )
 }

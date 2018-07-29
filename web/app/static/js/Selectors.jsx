@@ -1,7 +1,70 @@
 import React from "react";
 import { Form, Select } from "semantic-ui-react";
+import _ from "lodash";
 
 import Colander from "./colander";
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+export class ObjectSelector extends React.Component {
+
+    constructor (props) {
+        super(props);
+
+        this.fetchOptions = this.fetchOptions.bind(this);
+
+        this.state = {
+            loading: true,
+            options: []
+        }
+    }
+
+    componentDidMount () { this.fetchOptions() }
+    componentDidUpdate (prevProps) {
+        if (prevProps.type !== this.props.type
+            || _.isEqual(prevProps.query, this.props.query))
+            this.fetchOptions();
+    }
+
+    fetchOptions () {
+        const { type, query } = this.props;
+
+        this.setState({ loading: true, options: [] });
+        Colander.filter(type, {
+            query,
+            view: { _only: ['id', 'name', 'title'] },
+            onSuccess: results => {
+                this.setState({
+                    loading: false,
+                    options: results.items.map(obj => ({ value: obj.id, text: obj.name || obj.title || `${type} #${obj.id}`}))
+                })
+            },
+            onFailure: error => {
+                alert(error);
+                this.setState({ loading: false })
+            }
+        })
+    }
+
+    render () {
+        const {form, ...childProps} = this.props;
+
+        if (form)
+            return <Form.Dropdown
+                selection
+                {...this.state}
+                {...childProps}
+            />;
+        else
+            return <Select
+                {...this.state}
+                {...childProps}
+            />;
+    }
+
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,3 +227,12 @@ export class VendorSelector extends React.Component {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+const selectors = {
+    'Extension': ExtensionSelector,
+    'Action': ActionSelector,
+    'Vendor': VendorSelector
+};
+
+export default selectors;

@@ -16,11 +16,10 @@ import {
     Header,
     Button,
     Dimmer,
+    Loader,
     Message,
     Grid
 } from "semantic-ui-react";
-
-import forms from "./Forms";
 
 // import DashboardView from "./DashboardView";
 // import SearchView from "./SearchView";
@@ -30,6 +29,7 @@ import forms from "./Forms";
 // import ExtensionView from "./ExtensionView";
 // import TaskView from "./TaskView";
 import ObjectView from "./ObjectView";
+import Autoform from "./Autoform";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,19 +108,58 @@ class CreatorSidebar extends React.Component {
     constructor (props) {
         super(props);
 
+        this.fetchSchema = this.fetchSchema.bind(this);
         this.handleEdit = this.handleEdit.bind(this);
         this.handleCancel = this.handleCancel.bind(this);
         this.handleCreate = this.handleCreate.bind(this);
 
         this.state = {
+            loading: false,
             creating: false,
             object: {},
-            errors: {}
+            errors: {},
+            schemas: {}
         }
     }
 
-    handleEdit (e, { name, value }) {
-        this.setState({ object: update(this.state.object, { [name]: { $set: value } })});
+    componentDidMount () {
+        this.fetchSchema();
+    }
+
+    componentDidUpdate (prevProps, prevState) {
+        if (prevProps.type !== this.props.type)
+            this.fetchSchema();
+    }
+
+    fetchSchema () {
+        this.setState({ loading: true });
+        const { type } = this.props;
+
+        Colander.schema(type, {
+            onSuccess: results => {
+                if ('errors' in results)
+                    this.setState({
+                        loading: false,
+                        errors: results.errors
+                    });
+                else {
+                    this.setState({
+                        loading: false,
+                        schemas: update(this.state.schemas, {$merge: results.definitions})
+                    });
+                    console.log(this.state.schemas)
+                }
+            },
+
+            onFailure: error => {
+                this.setState({ loading: false });
+                alert(error);
+            }
+        })
+    }
+
+    handleEdit (data) {
+        this.setState({ object: data });
     }
 
     handleCancel () {
@@ -155,9 +194,23 @@ class CreatorSidebar extends React.Component {
     }
 
     render () {
-        const { creating, object, errors } = this.state;
+        const { loading, creating, object, errors, schemas } = this.state;
         const { type, visible } = this.props;
-        const form = forms[type]({ data: object, onChange: this.handleEdit, errors});
+        const schema = schemas[type] || {};
+        const properties = schema.properties || {};
+
+        let only;
+        switch (type) {
+            case 'Vendor':
+                only = ['name', 'url', 'image_url', 'ext_id', 'avg_shipping', 'avg_tax'];
+                break;
+            case 'Listing':
+                only = ['vendor_id', 'sku', 'title', 'detail_url', 'image_url', 'brand', 'model', 'quantity',
+                        'price', 'rank', 'rating'];
+                break;
+            default:
+                only = Object.keys(properties).filter(key => key !== 'id' && properties[key].type !== 'object');
+        }
 
         return (
             <Sidebar
@@ -176,20 +229,32 @@ class CreatorSidebar extends React.Component {
                     <Header as={'h2'}>Create {_.capitalize(type)}</Header>
                 </Segment>
                 <div style={sidebarContentStyle}>
-                    <Grid columns={1}>
-                        <Grid.Row>
-                            <Grid.Column>
-                                {form}
-                            </Grid.Column>
-                        </Grid.Row>
-                        <Grid.Row>
-                            <Grid.Column>
-                                <Message error hidden={_.isEmpty(errors)}>
-                                    {Object.keys(errors).map(err => <li key={err}><b>{err}</b>: {errors[err]}</li>)}
-                                </Message>
-                            </Grid.Column>
-                        </Grid.Row>
-                    </Grid>
+                    <Dimmer.Dimmable dimmed={loading}>
+                        <Dimmer active={loading}>
+                            <Loader/>
+                        </Dimmer>
+
+                        <Grid columns={1}>
+                            <Grid.Row>
+                                <Grid.Column>
+                                    <Autoform
+                                        schema={schema}
+                                        only={only}
+                                        data={object}
+                                        onChange={this.handleEdit}
+                                        errors={errors}
+                                    />
+                                </Grid.Column>
+                            </Grid.Row>
+                            <Grid.Row>
+                                <Grid.Column>
+                                    <Message error hidden={_.isEmpty(errors)}>
+                                        {Object.keys(errors).map(err => <li key={err}><b>{err}</b>: {errors[err]}</li>)}
+                                    </Message>
+                                </Grid.Column>
+                            </Grid.Row>
+                        </Grid>
+                    </Dimmer.Dimmable>
                 </div>
                 <Segment
                     inverted
@@ -225,7 +290,7 @@ class App extends React.Component {
             results: [],
             query: '',
             sidebarVisible: false,
-            creatorType: 'vendor'
+            creatorType: 'Vendor'
         }
     }
 
@@ -262,7 +327,7 @@ class App extends React.Component {
     }
 
     handleResultSelect (e, data) {
-        const url = `/${data.result.type.toLowerCase()}s/${data.result.id}`;
+        const url = `/${data.result.type}s/${data.result.id}`;
         this.props.history.push(url);
     }
 
@@ -294,10 +359,10 @@ class App extends React.Component {
                         <Menu.Item position={'right'}>
                             <Dropdown item text={'Create'}>
                                 <Dropdown.Menu>
-                                    <Dropdown.Item onClick={() => this.openCreator('vendor')}>Vendor</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => this.openCreator('customer')}>Customer</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => this.openCreator('listing')}>Listing</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => {this.openCreator('task')}}>Task</Dropdown.Item>
+                                    <Dropdown.Item onClick={() => this.openCreator('Vendor')}>Vendor</Dropdown.Item>
+                                    <Dropdown.Item onClick={() => this.openCreator('Customer')}>Customer</Dropdown.Item>
+                                    <Dropdown.Item onClick={() => this.openCreator('Listing')}>Listing</Dropdown.Item>
+                                    <Dropdown.Item onClick={() => {this.openCreator('Task')}}>Task</Dropdown.Item>
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>
@@ -315,8 +380,6 @@ class App extends React.Component {
                     </Menu>
                     <Container fluid style={{ paddingLeft: '5em', paddingRight: '5em'}}>
                         <Route path={'/:type/:id'} component={ObjectView}/>
-
-
                         {/*/!*<Route exact path={'/'} component={DashboardView}/>*!/*/}
                         {/*/!*<Route path={'/search'} component={SearchView}/>*!/*/}
                         {/*<Route path={'/vendors/:vendorId'} component={VendorView}/>*/}

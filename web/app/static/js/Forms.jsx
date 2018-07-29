@@ -360,18 +360,3 @@ export function ExtensionForm (props) {
     )
 }
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-const forms = {
-    task: TaskForm,
-    vendor: VendorForm,
-    customer: CustomerForm,
-    listing: ListingForm,
-    extension: ExtensionForm
-};
-
-export default forms;

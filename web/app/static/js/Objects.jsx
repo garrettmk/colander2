@@ -16,8 +16,10 @@ export const QueryContext = React.createContext({
     updateView: undefined
 });
 
+
 export const ObjectContext = React.createContext({
     original: undefined,
+    schema: undefined,
     edits: {},
     errors: {},
     loading: false,
@@ -26,8 +28,16 @@ export const ObjectContext = React.createContext({
     save: undefined
 });
 
+
+export const PreviewContext = React.createContext({
+    loading: false,
+    preview: undefined,
+});
+
+
 export const CollectionContext = React.createContext({
     items: [],
+    schema: undefined,
     total: undefined,
     page: undefined,
     pages: undefined,
@@ -112,6 +122,7 @@ export class ObjectProvider extends React.Component {
 
         this.state = {
             original: undefined,
+            schema: undefined,
             edits: {},
             errors: {},
             loading: false
@@ -146,6 +157,7 @@ export class ObjectProvider extends React.Component {
 
             onSuccess: results => this.setState({
                 original: results.items ? results.items[0] : undefined,
+                schemas: results.schema ? results.schema.definitions : undefined,
                 edits: {},
                 errors: results.errors || {},
                 loading: false,
@@ -234,6 +246,79 @@ ObjectProvider.propTypes = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+export class PreviewProvider extends React.Component {
+
+    constructor (props) {
+        super(props);
+
+        this.fetchPreview = this.fetchPreview.bind(this);
+
+        this.state = {
+            loading: false,
+            preview: undefined,
+        }
+    }
+
+    componentDidMount () { this.fetchPreview() }
+
+    componentDidUpdate (prevProps) {
+        const { type, id } = this.props;
+
+        if (prevProps.type !== type || prevProps.id !== id)
+            this.fetchPreview();
+    }
+
+    fetchPreview () {
+        const { type, id } = this.props;
+
+        if (!type || !id)
+            return this.setState({ loading: false, preview: undefined });
+
+        this.setState({ loading: true });
+
+        Colander.filter(type, {
+            query: { id },
+            schema: 'Preview',
+
+            onSuccess: results => {
+                this.setState({
+                    loading: false,
+                    preview: results.items ? results.items[0] : undefined
+                })
+            },
+
+            onFailure: error => {
+                this.setState({
+                    loading: false,
+                    preview: undefined,
+                })
+            }
+        })
+    }
+
+    render () {
+        const { children } = this.props;
+
+        return (
+            <PreviewContext.Provider value={{
+                ...this.state
+            }}>
+                {children}
+            </PreviewContext.Provider>
+        );
+    }
+}
+
+
+PreviewProvider.propTypes = {
+    type: PropTypes.string,
+    id: PropTypes.integer,
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 export class CollectionProvider extends React.Component {
 
     constructor (props) {
@@ -248,6 +333,7 @@ export class CollectionProvider extends React.Component {
 
         this.state = {
             items: [],
+            schemas: {},
             total: undefined,
             page: undefined,
             pages: undefined,
@@ -273,6 +359,7 @@ export class CollectionProvider extends React.Component {
 
             onSuccess: results => this.setState({
                 ...results,
+                schema: results.schema ? results.schema.definitions : undefined,
                 edits: [],
                 errors: [],
                 loading: [],
@@ -386,6 +473,7 @@ export function IndexProvider (props) {
         <CollectionContext.Consumer>
             {collection => {
                 const original = collection.items ? collection.items[index] : undefined;
+                const schema = collection.schema;
                 const edits = collection.edits ? collection.edits[index] : undefined;
                 const errors = collection.errors ? collection.errors[index] : undefined;
                 const type = collection.type;
@@ -395,6 +483,7 @@ export function IndexProvider (props) {
                 return (
                     <ObjectContext.Provider value={{
                         original,
+                        schema,
                         edits,
                         errors,
                         loading,

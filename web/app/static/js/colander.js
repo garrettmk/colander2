@@ -36,6 +36,7 @@ const Colander = {
     },
 
 
+    schema: function (type, options) { Colander.post(`/${type}/schema`, options) },
     filter: function (type, options) { Colander.post(`/${type}/filter`, options) },
     update: function (type, options) { Colander.post(`/${type}/update`, options) },
     create: function (type, options) { Colander.post(`/${type}/create`, options) },
