@@ -82,13 +82,13 @@ class Vendor(Entity):
     avg_tax = jb.Column(db.Float, nullable=False, default=0, label='Avg. tax', format='percent')
     ext_id = jb.Column(db.Integer, db.ForeignKey('extension.id'), label='Extension ID')
 
-    ext = jb.relationship('Extension', label='Extension')
+    extension = jb.relationship('Extension', label='Extension')
     listings = jb.relationship('Listing', back_populates='vendor', passive_deletes=True, uselist=True, lazy='dynamic', label='Listings')
 
     class Preview(mm.Schema):
         id = mmf.Int()
         type = mmf.Str()
         title = mmf.Str(attribute='name')
-        description = mmf.Str(attribute='url')
+        # description = mmf.Str(attribute='url')
         image = mmf.Str(attribute='image_url')
         url = mmf.URL()

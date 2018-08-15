@@ -14,7 +14,7 @@ class Crawl(ExtActor):
     public = True
 
     class Schema(Schema):
-        urls = fields.List(fields.URL(), required=True, name='URLs')
+        urls = fields.List(fields.URL(), required=True, title='URLs')
 
     def perform(self, *args, **kwargs):
         return launch_spider('katom', **kwargs)
@@ -26,10 +26,10 @@ class FormTest(ExtActor):
 
     class Schema(Schema):
         int_field = fields.Int()
-        float_field = fields.Float(required=True, name='Float Field')
+        float_field = fields.Float(required=True, title='Float Field')
         str_field = fields.Str()
-        list_field = fields.List(fields.Str(), name='List of strings')
-        int_list = fields.List(fields.Int(), name='List of integers')
+        list_field = fields.List(fields.Str(), title='List of strings')
+        int_list = fields.List(fields.Int(), title='List of integers')
         listing_field = ObjectIdField(class_='listing')
 
     def perform(self, *args, **kwargs):

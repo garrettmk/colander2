@@ -104,7 +104,7 @@ class ObjectUpdater(ColanderResource):
     @use_kwargs(UpdateSchema)
     def post(self, type_, query, data):
         obj_type = getattr(models, type_)
-        loaded = obj_type.Schema().load(data, partial=True)
+        loaded = obj_type.__schema__().load(data, partial=True)
 
         if loaded.errors:
             return {'errors': loaded.errors}

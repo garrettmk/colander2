@@ -1,74 +1,15 @@
 import React from "react";
-import { Route, Link, withRouter } from "react-router-dom";
-import queryString from "query-string";
+import PropTypes from "prop-types";
+import { Route, withRouter } from "react-router-dom";
 import _ from "lodash";
 import update from "immutability-helper";
 
+import { Container, Segment, Menu, Search, Dropdown, Sidebar, Header, Button, Dimmer, Loader, Message, Grid } from "semantic-ui-react";
+
 import Colander from "./colander";
-
-import {
-    Container,
-    Segment,
-    Menu,
-    Search,
-    Dropdown,
-    Sidebar,
-    Header,
-    Button,
-    Dimmer,
-    Loader,
-    Message,
-    Grid
-} from "semantic-ui-react";
-
-// import DashboardView from "./DashboardView";
-// import SearchView from "./SearchView";
-// import VendorView from "./VendorView";
-// import ListingView from "./ListingView";
-// import OrderView from "./OrderView";
-// import ExtensionView from "./ExtensionView";
-// import TaskView from "./TaskView";
+import { DocumentContext, EditableDocProvider } from "./Context/DocumentContext";
+import ObjectProperties from "./Objects/ObjectProperties";
 import ObjectView from "./ObjectView";
-import Autoform from "./Autoform";
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-export function asCurrency(value) {
-    try {
-        if (typeof value === 'string')
-            value = parseFloat(value);
-
-        return value.toLocaleString('en-US', {
-            style: 'currency',
-            currency: 'USD'
-        })
-    } catch (e) {
-        return 'n/a'
-    }
-}
-
-export function asCount(value) {
-        try {
-            if (typeof value === 'string')
-                value = parseInt(value)
-            return value.toLocaleString('en-US');
-        } catch (e) {
-            return 'n/a'
-        }
-
-}
-
-export function asPercent(value) {
-    try {
-        if (typeof value === 'string')
-            value = parseFloat(value);
-        return (value * 100).toLocaleString('en-US') + '%'
-    } catch (e) {
-        return 'n/a'
-    }
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,24 +50,19 @@ class CreatorSidebar extends React.Component {
         super(props);
 
         this.fetchSchema = this.fetchSchema.bind(this);
-        this.handleEdit = this.handleEdit.bind(this);
+        this.handleSave = this.handleSave.bind(this);
         this.handleCancel = this.handleCancel.bind(this);
-        this.handleCreate = this.handleCreate.bind(this);
 
         this.state = {
             loading: false,
-            creating: false,
-            object: {},
-            errors: {},
-            schemas: {}
+            doc: {},
+            schemas: {},
+            errors: {}
         }
     }
 
-    componentDidMount () {
-        this.fetchSchema();
-    }
-
-    componentDidUpdate (prevProps, prevState) {
+    componentDidMount () { this.fetchSchema() }
+    componentDidUpdate(prevProps) {
         if (prevProps.type !== this.props.type)
             this.fetchSchema();
     }
@@ -136,81 +72,55 @@ class CreatorSidebar extends React.Component {
         const { type } = this.props;
 
         Colander.schema(type, {
+            onSuccess: results => this.setState({
+                loading: false,
+                schemas: results.definitions
+            }),
+
+            onFailure: results => this.setState({
+                loading: false,
+                schemas: {}
+            })
+        })
+    }
+
+    handleSave (edits) {
+        const { doc } = this.state;
+        const { onClose = () => {} } = this.props;
+
+        this.setState({ loading: true });
+
+        Colander.create(type, {
+            data: update(doc, { $merge: edits }),
+
             onSuccess: results => {
-                if ('errors' in results)
-                    this.setState({
-                        loading: false,
-                        errors: results.errors
-                    });
-                else {
-                    this.setState({
-                        loading: false,
-                        schemas: update(this.state.schemas, {$merge: results.definitions})
-                    });
-                    console.log(this.state.schemas)
+                if (results.errors) {
+                    this.setState({ loading: false, errors })
+                } else {
+                    this.setState({ loading: false, doc: {}, errors: {} });
+                    onClose();
                 }
             },
 
             onFailure: error => {
-                this.setState({ loading: false });
-                alert(error);
+                this.setState({ loading: false, errors: { save: error } });
             }
         })
     }
 
-    handleEdit (data) {
-        this.setState({ object: data });
-    }
-
     handleCancel () {
-        const { onCancel } = this.props;
-        onCancel ? onCancel() : null;
-    }
-
-    handleCreate () {
-        this.setState({ creating: true });
-        const { type, onCreated } = this.props;
-
-        Colander.create(type, {
-            data: this.state.object,
-
-            onSuccess: results => {
-                if ('errors' in results)
-                    this.setState({
-                        creating: false,
-                        errors: results.errors
-                    });
-                else {
-                    this.setState({ creating: false });
-                    onCreated ? onCreated(results.id) : null;
-                }
-            },
-
-            onFailure: error => {
-                this.setState({ creating: false });
-                alert(error);
-            }
-        });
+        const { onClose } = this.props;
+        onClose && onClose();
     }
 
     render () {
-        const { loading, creating, object, errors, schemas } = this.state;
         const { type, visible } = this.props;
-        const schema = schemas[type] || {};
-        const properties = schema.properties || {};
+        const { loading, errors } = this.state;
 
-        let only;
-        switch (type) {
-            case 'Vendor':
-                only = ['name', 'url', 'image_url', 'ext_id', 'avg_shipping', 'avg_tax'];
-                break;
-            case 'Listing':
-                only = ['vendor_id', 'sku', 'title', 'detail_url', 'image_url', 'brand', 'model', 'quantity',
-                        'price', 'rank', 'rating'];
-                break;
-            default:
-                only = Object.keys(properties).filter(key => key !== 'id' && properties[key].type !== 'object');
-        }
+        const only = {
+            Vendor: ['name', 'url', 'image_url', 'ext_id', 'avg_shipping', 'avg_tax'],
+            Listing: ['vendor_id', 'sku', 'title', 'detail_url', 'image_url', 'brand', 'model', 'quantity', 'price', 'rank', 'rating'],
+        }[type];
 
         return (
             <Sidebar
@@ -220,55 +130,71 @@ class CreatorSidebar extends React.Component {
                 visible={visible}
                 style={sidebarStyle}
             >
-                <Segment
-                    inverted
-                    color={'blue'}
-                    textAlign={'center'}
-                    style={sidebarHeaderStyle}
-                >
-                    <Header as={'h2'}>Create {_.capitalize(type)}</Header>
-                </Segment>
-                <div style={sidebarContentStyle}>
-                    <Dimmer.Dimmable dimmed={loading}>
-                        <Dimmer active={loading}>
-                            <Loader/>
-                        </Dimmer>
+                <EditableDocProvider {...this.state} type={type} onSave={this.handleSave}>
+                    <Segment
+                        inverted
+                        color={'blue'}
+                        textAlign={'center'}
+                        style={sidebarHeaderStyle}
+                    >
+                        <Header as={'h2'}>Create {type}</Header>
+                    </Segment>
 
-                        <Grid columns={1}>
-                            <Grid.Row>
-                                <Grid.Column>
-                                    <Autoform
-                                        schema={schema}
-                                        only={only}
-                                        data={object}
-                                        onChange={this.handleEdit}
-                                        errors={errors}
-                                    />
-                                </Grid.Column>
-                            </Grid.Row>
-                            <Grid.Row>
-                                <Grid.Column>
-                                    <Message error hidden={_.isEmpty(errors)}>
-                                        {Object.keys(errors).map(err => <li key={err}><b>{err}</b>: {errors[err]}</li>)}
-                                    </Message>
-                                </Grid.Column>
-                            </Grid.Row>
-                        </Grid>
-                    </Dimmer.Dimmable>
-                </div>
-                <Segment
-                    inverted
-                    color={'blue'}
-                    textAlign={'center'}
-                    style={{ borderRadius: 0 }}
-                >
-                    <Button onClick={this.handleCancel}>Cancel</Button>
-                    <Button onClick={this.handleCreate} loading={creating}>Create</Button>
-                </Segment>
+                    <div style={sidebarContentStyle}>
+                        <Dimmer.Dimmable dimmed={loading}>
+                            <Dimmer active={loading}>
+                                <Loader/>
+                            </Dimmer>
+
+                            <Grid>
+                                <Grid.Row>
+                                    <Grid.Column>
+                                        <ObjectProperties as={'div'} only={only}/>
+                                    </Grid.Column>
+                                </Grid.Row>
+                                <Grid.Row>
+                                    <Grid.Column>
+                                        <Message error hidden={_.isEmpty(errors)}>
+                                            <DocumentContext.Consumer>
+                                                { ({ errors }) => Object.keys(errors).map(err =>
+                                                    <li key={err}>
+                                                        <b>{err}</b>: {errors[err]}
+                                                    </li>
+                                                )}
+                                            </DocumentContext.Consumer>
+                                        </Message>
+                                    </Grid.Column>
+                                </Grid.Row>
+                            </Grid>
+                        </Dimmer.Dimmable>
+                    </div>
+
+                    <Segment
+                        inverted
+                        color={'blue'}
+                        textAlign={'center'}
+                        style={{borderRadius: 0}}
+                    >
+                        <DocumentContext.Consumer>
+                            { ({ save }) => (
+                                <React.Fragment>
+                                    <Button onClick={this.handleCancel}>Cancel</Button>
+                                    <Button onClick={save} loading={loading}>Create</Button>
+                                </React.Fragment>
+                            )}
+                        </DocumentContext.Consumer>
+                    </Segment>
+                </EditableDocProvider>
             </Sidebar>
         )
     }
 }
+
+
+CreatorSidebar.propTypes = {
+    type: PropTypes.string.isRequired,
+    visible: PropTypes.bool
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -303,31 +229,25 @@ class App extends React.Component {
     }
 
     fetchResults (query) {
-        fetch(`/api/quick?query=${query}`).then(response => {
-            if (response.ok)
-                return response.json();
-            throw new Error('Could not fetch search results.')
-        }).then(results => {
-            this.setState({
-                loading: false,
-                results
-            })
-        }).catch(error => {
-            alert(error);
-            this.reset();
-        })
+        this.setState({ loading: true, query });
+
+        Colander.preview({
+            query,
+
+            onSuccess: results => this.setState({ loading: false, results }),
+            onFailure: error => { this.setState({ loading: false }); alert(error); }
+        });
     }
 
     handleQueryChange (e, { value }) {
         if (!value)
             return this.reset();
 
-        this.setState({ loading: true, query: value });
         this.fetchResults(value);
     }
 
     handleResultSelect (e, data) {
-        const url = `/${data.result.type}s/${data.result.id}`;
+        const url = `/${data.result.type}/${data.result.id}`;
         this.props.history.push(url);
     }
 
@@ -340,8 +260,7 @@ class App extends React.Component {
     }
 
     render () {
-        const query = queryString.parse(location.search);
-        const { creatorType, sidebarVisible } = this.state;
+        const { loading, results, query, creatorType, sidebarVisible } = this.state;
 
         return (
             <Sidebar.Pushable>
@@ -351,7 +270,7 @@ class App extends React.Component {
                     onCreated={id => alert(id)}
                     onCancel={this.hideSidebar}
                 />
-                <Sidebar.Pusher dimmed={this.state.sidebarVisible} onClick={() => this.setState({sidebarVisible: false})}>
+                <Sidebar.Pusher dimmed={sidebarVisible} onClick={() => this.setState({ sidebarVisible: false })}>
                     <Menu inverted style={menuStyle}>
                         <Menu.Item header>Colander</Menu.Item>
                         <Menu.Item>Dashboards</Menu.Item>
@@ -362,7 +281,7 @@ class App extends React.Component {
                                     <Dropdown.Item onClick={() => this.openCreator('Vendor')}>Vendor</Dropdown.Item>
                                     <Dropdown.Item onClick={() => this.openCreator('Customer')}>Customer</Dropdown.Item>
                                     <Dropdown.Item onClick={() => this.openCreator('Listing')}>Listing</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => {this.openCreator('Task')}}>Task</Dropdown.Item>
+                                    <Dropdown.Item onClick={() => this.openCreator('Task')}>Task</Dropdown.Item>
                                 </Dropdown.Menu>
                             </Dropdown>
                         </Menu.Item>
@@ -370,24 +289,16 @@ class App extends React.Component {
                             <Search
                                 category
                                 aligned={'right'}
-                                loading={this.state.loading}
+                                loading={loading}
                                 onSearchChange={this.handleQueryChange}
                                 onResultSelect={this.handleResultSelect}
-                                results={this.state.results}
-                                value={this.state.query}
+                                results={results}
+                                value={query}
                             />
                         </Menu.Item>
                     </Menu>
                     <Container fluid style={{ paddingLeft: '5em', paddingRight: '5em'}}>
                         <Route path={'/:type/:id'} component={ObjectView}/>
-                        {/*/!*<Route exact path={'/'} component={DashboardView}/>*!/*/}
-                        {/*/!*<Route path={'/search'} component={SearchView}/>*!/*/}
-                        {/*<Route path={'/vendors/:vendorId'} component={VendorView}/>*/}
-                        {/*<Route path={'/listings/:listingId'} component={ListingView}/>*/}
-                        {/*/!*<Route path={'/orders/:orderId'} component={OrderView}/>*!/*/}
-                        {/*<Route path={'/extensions/:extId'} component={ExtensionView}/>*/}
-                        {/*/!*<Route path={'/tasks/:taskId(\\d+)'} component={TaskView}/>*!/*/}
-                        {/*/!*<Route path={'/tasks/create'} component={TaskView}/>*!/*/}
                     </Container>
                 </Sidebar.Pusher>
             </Sidebar.Pushable>

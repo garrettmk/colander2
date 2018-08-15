@@ -1,9 +1,11 @@
 import importlib
-import marshmallow as mm
 
-from dramatiq import GenericActor
-from sqlalchemy.orm import reconstructor
-from marshmallow_jsonschema import JSONSchema
+import sqlalchemy as sa
+import marshmallow as mm
+import marshmallow.fields as mmf
+import marshmallow_jsonschema as mmjs
+import sqlalchemy_jsonbase as jb
+import dramatiq as dq
 
 from app import db
 from core import JSONB
@@ -15,18 +17,18 @@ from .mixins import SearchMixin
 
 class Extension(db.Model, SearchMixin):
     """A module of code."""
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, nullable=False, unique=True)
-    module = db.Column(db.Text, nullable=False, unique=True)
-    exports = db.Column(JSONB, default=dict, nullable=False)
+    id = jb.Column(db.Integer, primary_key=True, label='Extension ID')
+    name = jb.Column(db.Text, nullable=False, unique=True, label='Name')
+    module = jb.Column(db.Text, nullable=False, unique=True, label='Module (ext.)')
+    exports = jb.Column(JSONB, default=dict, nullable=False, label='Exports')
 
-    tasks = db.relationship('Task', back_populates='extension')
+    tasks = jb.relationship('Task', back_populates='extension', uselist=True, label='Extensions')
 
-    class QuickResult(mm.Schema):
-        id = mm.fields.Int()
-        type = mm.fields.Str()
-        title = mm.fields.Str(attribute='name')
-        description = mm.fields.Function(lambda obj: f'ext.{obj.module}')
+    class Preview(mm.Schema):
+        id = mmf.Int()
+        type = mmf.Str()
+        title = mmf.Str(attribute='name')
+        description = mmf.Function(lambda obj: f'ext.{obj.module}')
 
     def __repr__(self):
         name = self.name or self.module or self.id
@@ -37,9 +39,10 @@ class Extension(db.Model, SearchMixin):
         self._m = None
         self.load_module()
 
-    @reconstructor
+    @sa.orm.reconstructor
     def __init_on_load___(self):
         self._m = None
+        self.load_module()
 
     @property
     def m(self):
@@ -68,23 +71,22 @@ class Extension(db.Model, SearchMixin):
 
         mod = importlib.import_module('ext.' + name)
         symbols = [getattr(mod, s) for s in dir(mod) if not s.startswith('_')]
-        actors = [s for s in symbols if isinstance(s, GenericActor) and getattr(s, 'public', False)]
+        actors = [s for s in symbols if isinstance(s, dq.GenericActor) and getattr(s, 'public', False)]
 
         self._m = mod
         self.name = self.name or self.module
         self.exports = {
             a.actor_name: {
                 'doc': getattr(a, '__doc__', a.__class__.__doc__),
-                'schema': JSONSchema().dump(a.Schema()).data['definitions']['Schema']
-            }
-        for a in actors}
+                'schema': mmjs.JSONSchema().dump(a.Schema()).data['definitions']['Schema']
+            } for a in actors}
 
-    def send(self, action, *args, **kwargs):
+    def send(self, action, **kwargs):
         """Call an actor asynchronously and returns the message ID."""
         if action not in self.exports:
             raise ValueError(f'Unknown export: {action}')
 
-        message = getattr(self.m, action).send(*args, **kwargs)
+        message = getattr(self.m, action).send(**kwargs)
         return {'message_id': message.message_id}
 
     def call(self, action, *args, **kwargs):
@@ -100,14 +102,14 @@ class Extension(db.Model, SearchMixin):
 
 class Task(db.Model, SearchMixin):
     """Stores info on recurring tasks."""
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, nullable=False, unique=True)
-    ext_id = db.Column(db.Integer, db.ForeignKey('extension.id', ondelete='CASCADE'), nullable=False)
-    action = db.Column(db.String(64), nullable=False)
-    params = db.Column(JSONB, default=dict)
-    schedule = db.Column(JSONB, default=dict)
+    id = jb.Column(db.Integer, primary_key=True)
+    name = jb.Column(db.Text, nullable=False, unique=True)
+    ext_id = jb.Column(db.Integer, db.ForeignKey('extension.id', ondelete='CASCADE'), nullable=False)
+    action = jb.Column(db.String(64), nullable=False)
+    params = jb.Column(JSONB, default=dict)
+    schedule = jb.Column(JSONB, default=dict)
 
-    extension = db.relationship('Extension', back_populates='tasks')
+    extension = jb.relationship('Extension', back_populates='tasks')
 
     def __init__(self, *args, **kwargs):
         self.params = {}

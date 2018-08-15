@@ -10,7 +10,7 @@ from .common import ColanderResource
 
 
 searchable_models = [m.__name__ for m in core.Base.all_subclasses() if issubclass(m, models.mixins.SearchMixin)]
-quick_models = [m.__name__ for m in core.Base.all_subclasses() if hasattr(m, 'QuickResult')]
+quick_models = [m.__name__ for m in core.Base.all_subclasses() if hasattr(m, 'Preview')]
 
 
 ########################################################################################################################
@@ -76,7 +76,7 @@ class QuickSearch(ColanderResource):
 
             response[type_name] = {
                 'name': model_type.__name__,
-                'results': [m.to_json(schema_attr='QuickResult') for m in results]
+                'results': [m.to_json(_schema='Preview') for m in results]
             }
 
         response.pop('Entity', None)

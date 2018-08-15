@@ -180,7 +180,7 @@ class Listing(db.Model, SearchMixin):
         label='Inventory'
     )
 
-    class QuickResult(mm.Schema):
+    class Preview(mm.Schema):
         id = mmf.Int()
         type = mmf.Str()
         title = mmf.Str(attribute='title')

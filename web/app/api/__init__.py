@@ -11,7 +11,7 @@ def ColanderAPI(*args, **kwargs):
     api = Api(*args, **kwargs)
 
     api.add_resource(TextSearch, '/search')
-    api.add_resource(QuickSearch, '/quick')
+    api.add_resource(QuickSearch, '/preview')
     api.add_resource(Tasks, '/tasks')
 
     api.add_resource(ObjectSchema, '/<type_>/schema')

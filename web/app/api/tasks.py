@@ -26,7 +26,7 @@ class Tasks(ColanderResource):
     """Task-related API."""
 
     class StartSchema(Schema):
-        id = fields.Int(required=True)
+        id = fields.Int()
         ext_id = fields.Int(required=True)
         action = fields.Str(required=True)
         params = fields.Dict(missing=dict)
@@ -42,4 +42,4 @@ class Tasks(ColanderResource):
             return task.send()
         else:
             ext = Extension.query.filter_by(id=ext_id).one()
-            return ext.send(action, *params.get('args', []), **params.get('kwargs', {}))
+            return ext.send(action, **params)

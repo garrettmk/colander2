@@ -41,7 +41,7 @@ const Colander = {
     update: function (type, options) { Colander.post(`/${type}/update`, options) },
     create: function (type, options) { Colander.post(`/${type}/create`, options) },
     delete_: function (type, options) { Colander.post(`/$${type}/delete`, options) },
-    quick: function (options) { Colander.get('/quick', options) },
+    preview: function (options) { Colander.get('/preview', options) },
     sendTask: function (options) { Colander.post('/tasks', options)}
 };
 
