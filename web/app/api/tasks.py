@@ -27,7 +27,7 @@ class Tasks(ColanderResource):
 
     class StartSchema(Schema):
         id = fields.Int()
-        ext_id = fields.Int(required=True)
+        ext_id = fields.Int(missing=None)
         action = fields.Str(required=True)
         params = fields.Dict(missing=dict)
 
@@ -41,5 +41,9 @@ class Tasks(ColanderResource):
             task = Task.query.filter_by(id=id).one()
             return task.send()
         else:
-            ext = Extension.query.filter_by(id=ext_id).one()
+            if ext_id:
+                ext = Extension.query.filter_by(id=ext_id).one()
+            else:
+                ext = Extension.query.filter_by(module='core').one()
+
             return ext.send(action, **params)

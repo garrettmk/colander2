@@ -42,7 +42,8 @@ const Colander = {
     create: function (type, options) { Colander.post(`/${type}/create`, options) },
     delete_: function (type, options) { Colander.post(`/$${type}/delete`, options) },
     preview: function (options) { Colander.get('/preview', options) },
-    sendTask: function (options) { Colander.post('/tasks', options)}
+    sendTask: function (options) { Colander.post('/tasks', options) },
+    similar: function (id, options) { Colander.get('/similar', { id, ...options}) }
 };
 
 

@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from app import db
-from core import CURRENCY
+from core import db, CURRENCY
 
 from .mixins import PolymorphicMixin, SearchMixin
 

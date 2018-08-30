@@ -3,12 +3,28 @@
 
 
 export const defaultImages = {
-    Vendor: 'https://imgplaceholder.com/128x128/cccccc/757575/fa-globe',
-    Customer: 'https://imgplaceholder.com/128x128/cccccc/757575/ion-android-person',
-    Extension: 'https://imgplaceholder.com/128x128/cccccc/757575/fa-gears'
+    Vendor: {
+        light: 'https://imgplaceholder.com/128x128/transparent/757575/fa-globe',
+        dark: 'https://imgplaceholder.com/128x128/transparent/ffffff/fa-globe',
+    },
+    Listing: {
+        light: 'https://imgplaceholder.com/128x128/transparent/757575/fa-barcode',
+        dark: 'https://imgplaceholder.com/128x128/transparent/ffffff/fa-barcode'
+    },
+    Customer: {
+        light: 'https://imgplaceholder.com/128x128/transparent/757575/ion-android-person',
+        dark: 'https://imgplaceholder.com/128x128/transparent/ffffff/ion-android-person',
+    },
+    Extension: {
+        light: 'https://imgplaceholder.com/128x128/transparent/757575/fa-gears',
+        dark: 'https://imgplaceholder.com/128x128/transparent/ffffff/fa-gears'
+    }
 };
 
-export const defaultImage = 'https://imgplaceholder.com/128x128/cccccc/757575/fa-question-circle-o';
+export const defaultImage = {
+    light: 'https://imgplaceholder.com/128x128/transparent/757575/fa-question-circle-o',
+    dark: 'https://imgplaceholder.com/128x128/transparent/ffffff/fa-question-circle-o'
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

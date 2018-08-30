@@ -1,9 +1,8 @@
-from marshmallow import Schema, fields
+import marshmallow as mm
+import marshmallow.fields as mmf
 
-from core.models import ObjectIdField
-from models.listings import Listing
-from ext.core import launch_spider, ext_actor, ExtActor
-from tasks.ops.listings import import_listing_default
+from models import Listing
+from ext.common import launch_spider, ExtActor
 
 
 ########################################################################################################################
@@ -13,41 +12,35 @@ class Crawl(ExtActor):
     """Launch the vendor's spdr and crawl the given URLs."""
     public = True
 
-    class Schema(Schema):
-        urls = fields.List(fields.URL(), required=True, title='URLs')
+    class Schema(mm.Schema):
+        """Parameter schema for Crawl."""
+        urls = mmf.List(mmf.URL(), required=True, title='URLs')
+        options = mmf.Dict(missing=dict, title='Spider options')
 
-    def perform(self, *args, **kwargs):
-        return launch_spider('katom', **kwargs)
+    def perform(self, urls=None, options=None):
+        return launch_spider('katom', urls=urls, context_id=self.context.id, spider_options=options)
 
 
-class FormTest(ExtActor):
-    """Test automatic form generation with different field types."""
+########################################################################################################################
+
+
+class UpdateListings(ExtActor):
+    """Crawl the detail pages for the given listings."""
     public = True
 
-    class Schema(Schema):
-        int_field = fields.Int()
-        float_field = fields.Float(required=True, title='Float Field')
-        str_field = fields.Str()
-        list_field = fields.List(fields.Str(), title='List of strings')
-        int_list = fields.List(fields.Int(), title='List of integers')
-        listing_field = ObjectIdField(class_='listing')
+    class Schema(mm.Schema):
+        """Parameter schema for UpdateListings."""
+        listing_ids = mmf.List(mmf.Int(), required=True, title='Listing IDs')
 
-    def perform(self, *args, **kwargs):
-        print(args, kwargs)
+    def perform(self, listing_ids=None):
+        listings = Listing.query.filter(Listing.id.in_(listing_ids)).all()
+        urls = [listing.detail_url or f'http://www.katom.com/{listing.sku}.html' for listing in listings]
 
-
-@ext_actor
-def import_spider_item(doc):
-    """Process a document from the spider."""
-    if 'sku' in doc:
-        return import_listing_default.send(doc)
-    else:
-        return doc
+        self.context.send(
+            Crawl.message(urls=urls)
+        )
 
 
-@ext_actor
-def update_listings(listing_ids):
-    """Update the given listing."""
-    listings = Listing.query.filter(Listing.id.in_(listing_ids)).all()
-    urls = [listing.detail_url or f'http://www.katom.com/{listing.sku}.html' for listing in listings]
-    Crawl(urls)
+
+########################################################################################################################
+

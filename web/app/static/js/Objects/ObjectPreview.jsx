@@ -1,17 +1,25 @@
 import React from "react";
+import { withRouter } from "react-router-dom";
 import PropTypes from "prop-types";
 
-import { Item, Button, Modal, Icon } from "semantic-ui-react";
+import { Item, Button, Modal, Icon, Popup } from "semantic-ui-react";
 
-import { DocumentContext } from "../Context/DocumentContext";
-import ObjectSearchBox from "./ObjectSearchBox";
+import { DocumentContext } from "../Contexts";
+import { ObjectSearchBox } from "../Objects";
 import { defaultImage, defaultImages } from "../style";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-export default class ObjectPreview extends React.Component {
+const noWrapStyle = {
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
+};
+
+
+class _ObjectPreview extends React.Component {
 
     constructor (props) {
         super(props);
@@ -38,34 +46,56 @@ export default class ObjectPreview extends React.Component {
             <DocumentContext.Consumer>
                 { ({ preview, type }) => (
                     <React.Fragment>
-                        <Item.Group>
+                        <Item.Group link onClick={() => preview && this.props.history.push(`/${type}/${preview.id}`)}>
                             <Item>
                                 <Item.Image size={small ? 'mini' : 'small'} src={preview
                                     ? preview.image
                                         ? preview.image
-                                        : defaultImages[type]
-                                    : defaultImage
+                                        : defaultImages[type].light
+                                    : defaultImage.light
                                 }/>
 
-                                <Item.Content>
+                                <Item.Content style={{ position: 'relative' }}>
+
                                     {onChange
-                                        ? <Button circular floated={'right'} icon={'search'} onClick={this.handleSearch}/>
+                                        ? <Popup
+                                            hoverable
+                                            trigger={<Icon
+                                                circular
+                                                size={'small'}
+                                                name={'search'}
+                                                onClick={this.handleSearch}
+                                                style={{
+                                                    position: 'absolute',
+                                                    right: '0px',
+                                                    top: '-3px',
+                                                }}
+                                            />}
+                                        >
+                                            <Button icon={'search'} onClick={this.handleSearch}/>
+                                        </Popup>
+
                                         : <React.Fragment/>
                                     }
-                                    <Item.Header className={small ? 'ui tiny' : ''}>{preview
-                                        ? preview.title
-                                            ? preview.title
-                                            : 'n/a'
-                                        : 'None selected'
-                                    }</Item.Header>
 
-                                    <Item.Meta>{preview
-                                        ? preview.description
-                                        : 'Click to search...'
-                                    }</Item.Meta>
-                                    {preview && preview.url &&
-                                        <Item.Extra as={'a'} href={preview.url}>{preview.url} <Icon name={'external'}/></Item.Extra>
-                                    }
+                                     <Item.Header className={small ? 'ui tiny' : ''} style={noWrapStyle}>
+                                         {preview
+                                            ? preview.title
+                                                ? preview.title
+                                                : 'n/a'
+                                            : 'None selected'
+                                         }
+                                     </Item.Header>
+
+
+
+                                    <Item.Meta style={noWrapStyle}>
+                                        {preview
+                                            ? preview.description
+                                            : 'Click to search...'
+                                        }
+                                    </Item.Meta>
+
                                 </Item.Content>
                             </Item>
                         </Item.Group>
@@ -75,7 +105,7 @@ export default class ObjectPreview extends React.Component {
                                 <ObjectSearchBox
                                     fluid
                                     input={{fluid: true}}
-                                    types={[type]}
+                                    type={type}
                                     onResultSelect={this.handleResultSelect}
                                 />
                             </Modal.Content>
@@ -89,6 +119,14 @@ export default class ObjectPreview extends React.Component {
                                     onClick={() => this.handleResultSelect({ id: null })}
                                     content={'Clear Selection'}
                                 />
+                                <Button
+                                    basic
+                                    inverted
+                                    color={'grey'}
+                                    icon={'cancel'}
+                                    onClick={() => this.setState({ searching: false })}
+                                    content={'Cancel'}
+                                />
                             </Modal.Actions>
                         </Modal>
                     </React.Fragment>
@@ -97,6 +135,8 @@ export default class ObjectPreview extends React.Component {
         )
     }
 }
+
+export const ObjectPreview = withRouter(_ObjectPreview);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

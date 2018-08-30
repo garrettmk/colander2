@@ -35,7 +35,7 @@ export class PreviewProvider extends React.Component {
         if (!type || !id)
             return this.setState({ loading: false, preview: undefined });
 
-        this.setState({ loading: true });
+        this.setState({ loading: true, preview: undefined });
 
         Colander.filter(type, {
             query: { id },

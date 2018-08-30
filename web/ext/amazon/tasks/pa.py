@@ -1,3 +1,6 @@
+import marshmallow as mm
+import marshmallow.fields as mmf
+
 import xmallow as xm
 
 from .common import MWSActor, MWSResponseSchema
@@ -9,8 +12,16 @@ from .common import MWSActor, MWSResponseSchema
 class ItemLookup(MWSActor):
     """Performs an ItemLookup operation. Accepts a dictionary with a 'sku' key, and updates and returns that dictionary
     with the results of the lookup."""
+    api_name = 'ProductAdvertising'
 
-    class Schema(MWSResponseSchema):
+    class Schema(mm.Schema):
+        """Parameter schema for ItemLookup."""
+        class ListingSchema(mm.Schema):
+            sku = mmf.String(required=True, title='Listing SKU')
+
+        listing = mmf.Nested(ListingSchema, required=True, title='Listing document')
+
+    class ResponseSchema(MWSResponseSchema):
         """Schema for ItemLookup responses."""
 
         class ProductSchema(xm.Schema):
@@ -41,19 +52,16 @@ class ItemLookup(MWSActor):
 
         products = xm.Field('//Item', ProductSchema(), many=True, default=list)
 
-    def api_name(self):
-        return 'ProductAdvertising'
-
-    def build_params(self, doc):
+    def build_params(self, listing=None):
         return {
         'ResponseGroup': 'Images,ItemAttributes,OfferFull,SalesRank,EditorialReview',
-        'ItemId': doc['sku'],
+        'ItemId': listing['sku'],
     }
 
     def process_response(self, args, kwargs, response):
         from pprint import pprint
         pprint(response)
-        doc = args[0] if args else kwargs.pop('doc')
+        doc = kwargs.pop('listing')
 
         if response.products:
             doc.update(response.products[0])
@@ -61,4 +69,5 @@ class ItemLookup(MWSActor):
         if response.errors:
             doc['errors'] = doc.get('errors', []).extend(response.errors)
 
+        self.context['listing'] = doc
         return doc

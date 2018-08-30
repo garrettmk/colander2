@@ -1,7 +1,7 @@
-from .amazon import ImportListing, ImportMatches, UpdateListings, process_listings, ImportInventory, \
-    process_inventory, ImportInboundOrder, ImportInboundOrders, process_inbound_orders, \
-    process_inbound_order_items, process_inbound_shipments, copy_to_listing, ImportOrders, process_orders, \
-    process_order_items, process_financial_events, ImportFinancials, process_financial_event_groups
+from .amazon import ImportListing, ImportMatches, UpdateListings, ProcessListings, ImportInventory, \
+    ProcessInventory, ImportInboundOrder, ImportInboundOrders, ProcessInboundOrders, \
+    ProcessInboundOrderItems, ProcessInboundShipments, CopyToListing, ImportOrders, ProcessOrders, \
+    ProcessOrderItems, ProcessFinancialEventGroups, ImportFinancials, ProcessFinancialEvents
 from .tasks.mws import GetServiceStatus, ListMatchingProducts, GetMyFeesEstimate, GetCompetitivePricingForASIN,\
     ListInventorySupply, ListInboundShipmentItems, ListInboundShipments, GetTransportContent, ListOrders,\
     ListOrderItems, GetOrder, ListFinancialEvents, ListFinancialEventGroups
@@ -10,21 +10,21 @@ from .tasks.pa import ItemLookup
 __all__ = [
     'ImportListing',
     'ImportMatches',
-    'process_listings',
+    'ProcessListings',
     'UpdateListings',
     'ImportInventory',
-    'process_inventory',
+    'ProcessInventory',
     'ImportInboundOrder',
     'ImportInboundOrders',
-    'process_inbound_orders',
-    'process_inbound_order_items',
-    'process_inbound_shipments',
-    'copy_to_listing',
+    'ProcessInboundOrders',
+    'ProcessInboundOrderItems',
+    'ProcessInboundShipments',
+    'CopyToListing',
     'ImportOrders',
-    'process_orders',
-    'process_order_items',
-    'process_financial_events',
-    'process_financial_event_groups',
+    'ProcessOrders',
+    'ProcessOrderItems',
+    'ProcessFinancialEvents',
+    'ProcessFinancialEventGroups',
     'ImportFinancials',
 
 

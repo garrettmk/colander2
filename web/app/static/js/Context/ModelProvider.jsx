@@ -38,9 +38,9 @@ export class ModelProvider extends React.Component {
         const { type, id, view } = this.props;
 
         if (!type || !id)
-            return this.setState({ loading: false, doc: undefined, schemas: {}, errors: {} })
+            return this.setState({ loading: false, doc: undefined, schemas: {}, errors: {} });
 
-        this.setState({ loading: true });
+        this.setState({ loading: true, doc: undefined, schemas: {}, errors: {} });
 
         Colander.filter(type, {
             query: { id },

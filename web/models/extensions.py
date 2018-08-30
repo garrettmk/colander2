@@ -5,10 +5,11 @@ import marshmallow as mm
 import marshmallow.fields as mmf
 import marshmallow_jsonschema as mmjs
 import sqlalchemy_jsonbase as jb
-import dramatiq as dq
 
-from app import db
-from core import JSONB
+from core import db, JSONB
+from tasks.broker import setup_dramatiq
+setup_dramatiq()
+from tasks.ops.common import TaskContext, ColanderActor
 from .mixins import SearchMixin
 
 
@@ -71,23 +72,28 @@ class Extension(db.Model, SearchMixin):
 
         mod = importlib.import_module('ext.' + name)
         symbols = [getattr(mod, s) for s in dir(mod) if not s.startswith('_')]
-        actors = [s for s in symbols if isinstance(s, dq.GenericActor) and getattr(s, 'public', False)]
+        actors = [s for s in symbols if isinstance(s, ColanderActor) and getattr(s, 'public', False)]
 
         self._m = mod
         self.name = self.name or self.module
         self.exports = {
-            a.actor_name: {
+            a.__class__.__name__: {
                 'doc': getattr(a, '__doc__', a.__class__.__doc__),
                 'schema': mmjs.JSONSchema().dump(a.Schema()).data['definitions']['Schema']
             } for a in actors}
 
-    def send(self, action, **kwargs):
+    def send(self, action, title=None, context=None,  **kwargs):
         """Call an actor asynchronously and returns the message ID."""
         if action not in self.exports:
             raise ValueError(f'Unknown export: {action}')
 
-        message = getattr(self.m, action).send(**kwargs)
-        return {'message_id': message.message_id}
+        # Get the actor and use it to build a context
+        message = getattr(self.m, action).message(**kwargs)
+
+        ctx = TaskContext(message, title=title or message.actor_name, data=context)
+        ctx.send()
+
+        return {'context_id': ctx.id}
 
     def call(self, action, *args, **kwargs):
         """Call an actor synchronously and return it's return value."""
@@ -104,7 +110,7 @@ class Task(db.Model, SearchMixin):
     """Stores info on recurring tasks."""
     id = jb.Column(db.Integer, primary_key=True)
     name = jb.Column(db.Text, nullable=False, unique=True)
-    ext_id = jb.Column(db.Integer, db.ForeignKey('extension.id', ondelete='CASCADE'), nullable=False)
+    ext_id = jb.Column(db.Integer, db.ForeignKey('extension.id', ondelete='CASCADE'))
     action = jb.Column(db.String(64), nullable=False)
     params = jb.Column(JSONB, default=dict)
     schedule = jb.Column(JSONB, default=dict)

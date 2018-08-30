@@ -2,7 +2,7 @@ import React from "react";
 
 import { Segment, Image, Header, Icon, Message, Loader } from "semantic-ui-react";
 
-import { DocumentContext } from "../Context/DocumentContext";
+import { DocumentContext } from "../Contexts";
 import { defaultImages } from "../style";
 
 
@@ -32,7 +32,7 @@ const headerImgOpts = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-export default function ObjectHeader (props) {
+export function ObjectHeader (props) {
     let { as, ...containerProps } = props;
 
     if (!as) {
@@ -53,7 +53,7 @@ export default function ObjectHeader (props) {
                 else
                     children = (
                         <React.Fragment>
-                            <Image src={preview.image || defaultImages[preview.type]} href={preview.url} {...headerImgOpts}/>
+                            <Image src={preview.image || defaultImages[preview.type].light} href={preview.url} {...headerImgOpts}/>
                             <Header {...headerOpts}>
                                 {preview.title}
                                 <Header.Subheader>

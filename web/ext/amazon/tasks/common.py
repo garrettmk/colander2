@@ -2,19 +2,19 @@ import re
 import time
 import redis
 import requests
-import dramatiq
 import amazonmws
 import attrdict
-from dramatiq.rate_limits import RateLimiter
 import xmallow as xm
 from lxml import etree
 
-from app import create_app, db, Config
-app = create_app()
+from core import app, db, search
+from ext.common import ExtActor
+from models import Vendor
+from config import Config
 
-from models.entities import Vendor
-from tasks.broker import rate_limiter_backend
-from ext.core import ExtActor
+
+########################################################################################################################
+
 
 ISO_8601 = '%Y-%m-%dT%H:%M:%S'
 
@@ -34,88 +34,6 @@ def remove_namespaces(xml):
     response = re_ns_open.sub('<', response)  # Remove namespaces in opening tags
     response = re_ns_close.sub('/', response)  # Remove namespaces in closing tags
     return response
-
-
-########################################################################################################################
-
-
-class HiResWindowRateLimiter(RateLimiter):
-    """Basically a copy of WindowRateLimiter with some modifications allowing sub-second windows."""
-
-    def __init__(self, backend, key, *, limit=1, window=1.0):
-        assert limit >= 1, "limit must be positive"
-        assert window > 0, "window must be positive"
-
-        super().__init__(backend, key)
-        self.limit = limit
-
-        min_res, max_res = 1, 0.001
-        res = min_res
-        while res >= max_res:
-            if window / res == int(window / res):
-                self.res = res
-                break
-            res /= 10
-        else:
-            self.res = None
-
-        self.window = int(window / res)
-        self.window_millis = int(window * 1000)
-
-    def _acquire(self):
-        timestamp = int(time.time() / self.res)
-        keys = ["%s@%s" % (self.key, timestamp - i) for i in range(self.window)]
-
-        # TODO: This is susceptible to drift because the keys are
-        # never re-computed when CAS fails.
-        return self.backend.incr_and_sum(
-            keys[0], keys, 1,
-            maximum=self.limit,
-            ttl=self.window_millis,
-        )
-
-    def _release(self):
-        pass
-
-
-########################################################################################################################
-
-
-def should_retry(retries_so_far, exception):
-    """Custom retry behavior for MWS calls."""
-    return retries_so_far < 10 and isinstance(exception, type(None))
-
-
-standard_options = {
-    'store_results': True,
-    'min_backoff': 5000,
-    'max_backoff': 300000,
-    'retry_when': should_retry,
-    'queue_name': 'ext',
-}
-
-
-def mws_actor(fn=None, *, quota_max=1, restore_rate=1, **options):
-    """A version of dramatiq.actor that automatically configures rate limiting."""
-
-    def decorator(fn):
-        actor_name = fn.__name__
-        mutex = HiResWindowRateLimiter(rate_limiter_backend, actor_name, limit=quota_max, window=restore_rate * quota_max)
-
-        def limited_fn(*args, **kwargs):
-            while True:
-                with mutex.acquire(raise_on_failure=False) as acquired:
-                    if acquired:
-                        return fn(*args, **kwargs)
-                    else:
-                        time.sleep(restore_rate)
-
-        opts = dict(standard_options)
-        opts['actor_name'] = actor_name
-        opts.update(options)
-        return dramatiq.actor(limited_fn, **opts)
-
-    return decorator if fn is None else decorator(fn)
 
 
 ########################################################################################################################
@@ -194,24 +112,24 @@ class MWSActor(ExtActor):
 
         @staticmethod
         def retry_when(retries_so_far, exception):
-            return retries_so_far < 10 and isinstance(exception, (RequestThrottled, InternalError, QuotaExceeded))
+            return retries_so_far < 10 and isinstance(exception, (
+                RequestThrottled,
+                InternalError,
+                QuotaExceeded
+            ))
 
-    Schema = RawXMLSchema
+    api_name = NotImplemented
+    ResponseSchema = RawXMLSchema
     apis = {}
     redis = redis.from_url(Config.REDIS_URL)
     pending_expires = 200  # TTL for pending keys in redis. They are deliberately cleared unless something bad happens
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.vendor_id = None
 
         # Redis script evaluator objects
         self._usage_loader = None
         self._usage_saver = None
-
-    def api_name(self):
-        """Return the name of the API used by the call."""
-        raise NotImplementedError
 
     def get_api(self, vendor_id, api_name):
         """Returns an API object for a specific vendor."""
@@ -226,7 +144,7 @@ class MWSActor(ExtActor):
                             Vendor.extra.op('->')('mws_keys') != None,
                             Vendor.extra.op('->')('pa_keys') != None
                         )
-                    ).first()
+                    ).first() or (None, None)
 
             if None in (mws_keys, pa_keys):
                 raise ValueError('MWS and PA API keys not found.')
@@ -246,17 +164,15 @@ class MWSActor(ExtActor):
         return dict()
 
     def perform(self, *args, **kwargs):
-        self.vendor_id = kwargs.pop('vendor_id', None)
         params = self.build_params(*args, **kwargs)
-
         response = self.make_api_call(type(self).__name__, **params)
         return self.process_response(args, kwargs, response)
 
     def make_api_call(self, action, throttle_action=None, **params):
         """Make an API call and return an AmzXmlResponse object."""
         throttle_action = throttle_action or action
-        api_name = self.api_name()
-        vendor_id = self.vendor_id
+        api_name = self.api_name
+        vendor_id = self.context['vendor_id']
 
         # Load the throttle limits for this API call
         default_limits = {'quota_max': 1, 'restore_rate': 1}
@@ -282,7 +198,7 @@ class MWSActor(ExtActor):
 
         # Parse the response
         xml = remove_namespaces(xml)
-        response = self.Schema().load(xml)
+        response = self.ResponseSchema().load(xml)
 
         # Raise an exception if needed
         if response.errors:

@@ -1,4 +1,6 @@
-from elasticsearch import Elasticsearch
+import elasticsearch as es
+
+import core
 
 
 ########################################################################################################################
@@ -6,8 +8,6 @@ from elasticsearch import Elasticsearch
 
 class ColanderSearch:
     """Provides text-search functionality."""
-
-    default_index = 'default'
 
     def __init__(self, app=None):
         self.es = None
@@ -17,7 +17,7 @@ class ColanderSearch:
             self.init_app(app)
 
     def init_app(self, app):
-        self.es = Elasticsearch(app.config['ELASTICSEARCH_URL'])
+        self.es = es.Elasticsearch(app.config['ELASTICSEARCH_URL'])
 
     def _setup_template(self):
         index_template = {
@@ -36,38 +36,46 @@ class ColanderSearch:
         self.es.indices.put_template(name='models_template', body=index_template)
         self._template = True
 
-    def add_to_index(self, model, index=None):
-        """Add a model to an index."""
+    def _index(self, model_or_type):
+        """Return the index name for the given model."""
+        try:
+            index = getattr(model_or_type, '__search_index__')
+        except AttributeError:
+            model_type = model_or_type if isinstance(model_or_type, type) else type(model_or_type)
+            index = f'{model_type.__name__.lower()}_index'
+            model_type.__search_index__ = index
+
+        return index
+
+    def add_to_index(self, model):
+        """Add a model its index."""
         if not self._template:
             self._setup_template()
 
-        index = index or getattr(model, '__search_index__', None) or self.default_index
-        model_type = type(model)
         payload = {
             field: getattr(model, field)
             for field in model.__search_fields__ if getattr(model, field) is not None
         }
-        payload['__model_type__'] = model_type.full_name()
+        payload['__model_type__'] = type(model).full_name()
 
         self.es.index(
-            index=index,
+            index=self._index(model),
             doc_type='doc',
             id=model.id,
             body=payload
         )
 
-    def remove_from_index(self, model, index=None):
+    def remove_from_index(self, model):
         """Remove a model from an index."""
-        index = index or getattr(model, '__search_index__', None) or self.default_index
         self.es.delete(
-            index=index,
+            index=self._index(model),
             doc_type='doc',
             id=model.id
         )
 
-    def reindex(self, cls, index=None):
+    def reindex(self, cls):
         """Re-index all objects of the given class."""
-        index = index or getattr(index, '__search_index__', None) or self.default_index
+        indexes = ','.join(set(self._index(sub) for sub in cls.all_subclasses()))
         body = {
             'query': {
                 'bool': {
@@ -77,18 +85,18 @@ class ColanderSearch:
             }
         }
 
-        self.es.delete_by_query(index=index, doc_type='doc', body=body, ignore=404)
+        self.es.delete_by_query(index=indexes, doc_type='doc', body=body, ignore=404)
 
         for obj in cls.query.all():
-            self.add_to_index(obj, index)
+            self.add_to_index(obj)
 
-    def delete_index(self, index=None):
+    def delete_index(self, model_or_type):
         """Delete an entire index."""
-        index = index or getattr(index, '__search_index__', None) or self.default_index
+        index = self._index(model_or_type)
         self.es.indices.delete(index=index, ignore=400)
 
-    def _search(self, query, index=None, model_types=None, min_score=None, page=1, per_page=10):
-        index = index if isinstance(index, str) else getattr(index, '__search_index__', None) or self.default_index
+    def _search(self, query, model_types=None, min_score=None, page=1, per_page=10):
+        indexes = '_all' #','.join(set([self._index(mt) for mt in model_types]))
         query_filter = query.pop('filter', [])
         if model_types:
             body = {
@@ -112,7 +120,7 @@ class ColanderSearch:
         body['size'] = per_page
         body['_source'] = ['__model_type__']
 
-        results = self.es.search(index=index, doc_type='doc', body=body)
+        results = self.es.search(index=indexes, doc_type='doc', body=body)
         total = results['hits']['total']
         max_score = results['hits']['max_score']
         hits = [
@@ -140,6 +148,14 @@ class ColanderSearch:
         }
 
         return self._search(query, **kwargs)
+
+    def find_similar(self, model, **kwargs):
+        """Find objects similar to the given model."""
+        model_type = type(model)
+        query = model.similarity_query()
+        model_types = kwargs.pop('model_types', model_type.all_subclasses())
+
+        return self._search(query, model_types=model_types, **kwargs)
 
     def find_matching_listings(self, listing, **kwargs):
         """Find listings for the same type of product."""
@@ -185,7 +201,6 @@ class ColanderSearch:
             'must_not': [{'ids': {'values': [listing.id]}}],
         }.items() if v}
 
-        index = kwargs.pop('index', None) or getattr(listing, '__search_index__', self.default_index)
-        model_types = kwargs.pop('model_types', [type(listing), *type(listing).all_subclasses()])
+        model_types = kwargs.pop('model_types', type(listing).all_subclasses())
 
-        return self._search(query, index=index, model_types=model_types, **kwargs)
+        return self._search(query, model_types=model_types, **kwargs)

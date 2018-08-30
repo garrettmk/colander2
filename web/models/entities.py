@@ -2,8 +2,7 @@ import marshmallow as mm
 import marshmallow.fields as mmf
 import sqlalchemy_jsonbase as jb
 
-from app import db
-from core import URL, JSONB
+from core import db, URL, JSONB
 
 from .mixins import PolymorphicMixin, SearchMixin
 
@@ -89,6 +88,5 @@ class Vendor(Entity):
         id = mmf.Int()
         type = mmf.Str()
         title = mmf.Str(attribute='name')
-        # description = mmf.Str(attribute='url')
+        description = mmf.Str(attribute='url')
         image = mmf.Str(attribute='image_url')
-        url = mmf.URL()

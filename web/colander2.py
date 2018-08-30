@@ -1,6 +1,5 @@
 from pprint import pprint
-from app import create_app, db, search
-app = create_app()
+from core import app, db, search
 
 
 ########################################################################################################################

@@ -1,8 +1,8 @@
 import math
 
-from webargs import fields
-from webargs.flaskparser import use_kwargs
-from marshmallow import Schema
+import webargs.flaskparser
+import marshmallow as mm
+import sqlalchemy_jsonbase as sajs
 
 import core
 import models
@@ -19,17 +19,17 @@ quick_models = [m.__name__ for m in core.Base.all_subclasses() if hasattr(m, 'Pr
 class TextSearch(ColanderResource):
     """Search the entire database using a query string."""
 
-    class SearchSchema(Schema):
+    class SearchSchema(mm.Schema):
         """Schema for search requests."""
-        query = fields.Str(missing='')
-        types = fields.List(fields.Str(), missing=searchable_models)
-        page = fields.Int(missing=1)
-        perPage = fields.Int(missing=10)
+        query = mm.fields.Str(missing='')
+        types = mm.fields.List(mm.fields.Str(), missing=searchable_models)
+        page = mm.fields.Int(missing=1)
+        perPage = mm.fields.Int(missing=10)
 
         class Meta:
             strict = True
 
-    @use_kwargs(SearchSchema)
+    @webargs.flaskparser.use_kwargs(SearchSchema)
     def get(self, query, types, page, perPage):
         response = {
             'total': 0
@@ -56,15 +56,15 @@ class TextSearch(ColanderResource):
 class QuickSearch(ColanderResource):
     """Quick search results using a query string."""
 
-    class QuickSchema(Schema):
-        query = fields.Str(required=True)
-        types = fields.List(fields.Str(), missing=quick_models)
-        limit = fields.Int(missing=10)
+    class QuickSchema(mm.Schema):
+        query = mm.fields.Str(required=True)
+        types = mm.fields.List(mm.fields.Str(), missing=quick_models)
+        limit = mm.fields.Int(missing=10)
 
         class Meta:
             strict = True
 
-    @use_kwargs(QuickSchema)
+    @webargs.flaskparser.use_kwargs(QuickSchema)
     def get(self, query, types, limit):
         response = {}
 
@@ -82,3 +82,44 @@ class QuickSearch(ColanderResource):
         response.pop('Entity', None)
 
         return response
+
+
+########################################################################################################################
+
+
+class ViewSchema(sajs.ViewSchema):
+    """Schema for the _view parameter."""
+    _page = mm.fields.Int(missing=1)
+    _per_page = mm.fields.Int(missing=10)
+
+
+class SimilarListingsSearch(ColanderResource):
+    """Find similar listings."""
+
+    class SimilarSchema(mm.Schema):
+        id = mm.fields.Str(required=True)
+        minScore = mm.fields.Float(missing=None)
+        page = mm.fields.Int(missing=1)
+        perPage = mm.fields.Int(missing=10)
+        view = mm.fields.Nested(ViewSchema, missing=dict)
+
+        class Meta:
+            string = True
+
+    @webargs.flaskparser.use_kwargs(SimilarSchema)
+    def get(self, id, minScore, page, perPage, view):
+        listing = models.Listing.query.filter_by(id=id).one()
+        results, total, scores = listing.find_similar(min_score=minScore, page=page, per_page=perPage)
+        paginator = results.paginate(page=page, per_page=perPage)
+        items = [m.to_json(view) for m in paginator.items]
+        for item in items:
+            item['_score'] = scores[item['id']]
+
+        return {
+            'total': paginator.total,
+            'page': paginator.page,
+            'pages': paginator.pages,
+            'per_page': paginator.per_page,
+            'items': items,
+            'schema': models.Listing.json_schema(view),
+        }

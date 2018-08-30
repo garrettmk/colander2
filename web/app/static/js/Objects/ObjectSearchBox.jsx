@@ -10,12 +10,12 @@ import Colander from "../colander";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-export default class ObjectSearchBox extends React.Component {
+export class ObjectSearchBox extends React.Component {
 
     constructor (props) {
         super(props);
 
-        this.fetchResults = this.fetchResults.bind(this);
+        this.fetchResults = _.debounce(this.fetchResults.bind(this), 300, {trailing: true});
         this.handleQueryChange = this.handleQueryChange.bind(this);
         this.handleResultSelect = this.handleResultSelect.bind(this);
 
@@ -27,7 +27,7 @@ export default class ObjectSearchBox extends React.Component {
     }
 
     componentDidUpdate (prevProps, prevState) {
-        if (!_.isEqual(prevProps.types, this.props.types)
+        if (!_.isEqual(prevProps.type, this.props.type)
             || prevState.query !== this.state.query)
             this.fetchResults();
     }
@@ -35,11 +35,11 @@ export default class ObjectSearchBox extends React.Component {
     fetchResults () {
         this.setState({ loading: true });
 
-        const { types } = this.props;
+        const { type } = this.props;
         const { query } = this.state;
 
         Colander.preview({
-            types,
+            type,
             query,
 
             onSuccess: results => this.setState({ loading: false, results }),
@@ -60,7 +60,7 @@ export default class ObjectSearchBox extends React.Component {
     }
 
     render () {
-        const { types, onResultSelect, ...boxProps } = this.props;
+        const { type, onResultSelect, ...boxProps } = this.props;
         const { query, loading, results } = this.state;
         return (
             <Search
@@ -81,7 +81,7 @@ export default class ObjectSearchBox extends React.Component {
 
 
 ObjectSearchBox.propTypes = {
-    types: PropTypes.string,
-    onResultsSelect: PropTypes.func,
+    type: PropTypes.string,
+    onResultSelect: PropTypes.func,
 };
 

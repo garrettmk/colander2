@@ -1,9 +1,11 @@
-import re
-import collections
-import amazonmws as mws
-import xmallow as xm
-from lxml import etree
 from datetime import datetime, timedelta
+
+import marshmallow as mm
+import marshmallow.fields as mmf
+
+import core
+import xmallow as xm
+import amazonmws as mws
 from .common import ISO_8601, MWSActor, MWSResponseSchema, RawXMLSchema
 
 
@@ -11,20 +13,27 @@ from .common import ISO_8601, MWSActor, MWSResponseSchema, RawXMLSchema
 
 
 class GetServiceStatus(MWSActor):
+    """Get the service status for the API."""
+    api_name = 'Products'
 
-    class Schema(MWSResponseSchema):
+    class ResponseSchema(MWSResponseSchema):
         status = xm.String('.//Status')
-
-    def api_name(self):
-        return 'Products'
 
 
 ########################################################################################################################
 
 
 class ListMatchingProducts(MWSActor):
+    """Returns basic info on products matching a text query."""
+    api_name = 'Products'
 
-    class Schema(MWSResponseSchema):
+    class Schema(mm.Schema):
+        """Parameters for ListMatchingProducts."""
+        query = mmf.String(required=True, title='Query')
+        market_id = mmf.String(missing='US', title='Market ID')
+
+    class ResponseSchema(MWSResponseSchema):
+        """Response schema for ListMatchingProducts."""
 
         class ProductSchema(xm.Schema):
             ignore_missing = True
@@ -58,10 +67,7 @@ class ListMatchingProducts(MWSActor):
 
         products = xm.List('//Product', ProductSchema(), default=list)
 
-    def api_name(self):
-        return 'Products'
-
-    def build_params(self, query, market_id='US'):
+    def build_params(self, query='', market_id='US'):
         return {
             'Query': query,
             'MarketplaceId': market_id if len(market_id) > 2 else mws.MARKETID[market_id]
@@ -75,17 +81,26 @@ class ListMatchingProducts(MWSActor):
 
 
 class GetMyFeesEstimate(MWSActor):
+    """Fetch estimated fulfillment fees for a given product."""
+    api_name = 'Products'
 
-    class Schema(MWSResponseSchema):
+    class Schema(mm.Schema):
+        """Parameter schema for GetMyFeesEstimate."""
+
+        class ListingSchema(mm.Schema):
+            sku = mmf.String(required=True, title='Listing SKU')
+
+        listing = mmf.Nested(ListingSchema, required=True, title='Listing document')
+        market_id = mmf.String(missing='US', title='Market ID')
+
+    class ResponseSchema(MWSResponseSchema):
+        """Response schema for GetMyFeesEstimate."""
         status = xm.String('.//Status')
         selling_fees = xm.Float('.//TotalFeesEstimate/Amount', default=None)
 
-    def api_name(self):
-        return 'Products'
-
-    def build_params(self, doc, market_id='US'):
+    def build_params(self, listing=None, market_id=None):
         try:
-            price = str(doc['price'])
+            price = str(listing['price'])
         except (KeyError, ValueError, TypeError):
             price = '0'
 
@@ -96,7 +111,7 @@ class GetMyFeesEstimate(MWSActor):
                 {
                     'MarketplaceId': market_id if len(market_id) > 2 else mws.MARKETID[market_id],
                     'IdType': 'ASIN',
-                    'IdValue': doc['sku'],
+                    'IdValue': listing['sku'],
                     'IsAmazonFulfilled': 'true',
                     'Identifier': 'request1',
                     'PriceToEstimateFees.ListingPrice.CurrencyCode': 'USD',
@@ -106,11 +121,12 @@ class GetMyFeesEstimate(MWSActor):
         )
 
     def process_response(self, args, kwargs, response):
-        doc = args[0] if args else kwargs['doc']
+        doc = kwargs['listing']
 
         if response.pop('status') == 'Success':
             doc['selling_fees'] = response.selling_fees
 
+        self.context['listing'] = doc
         return doc
 
 
@@ -118,8 +134,19 @@ class GetMyFeesEstimate(MWSActor):
 
 
 class GetCompetitivePricingForASIN(MWSActor):
+    """Get pricing information for a given listing."""
+    api_name = 'Products'
 
-    class Schema(MWSResponseSchema):
+    class Schema(mm.Schema):
+        """Parameter schema for GetCompetitivePricingForASIN."""
+        class ListingSchema(mm.Schema):
+            sku = mmf.String(required=True, title='Listing SKU')
+
+        listing = mmf.Nested(ListingSchema, required=True, title='Listing document')
+        market_id = mmf.String(missing='US', title='Market ID')
+
+    class ResponseSchema(MWSResponseSchema):
+        """Response schema for GetCompetitivePricingForASIN."""
         success = xm.Attribute('//GetCompetitivePricingForASINResult', attr='status')
         listing_price = xm.Float('.//ListingPrice/Amount', default=0)
         shipping = xm.Float('.//Shipping/Amount', default=0)
@@ -130,35 +157,41 @@ class GetCompetitivePricingForASIN(MWSActor):
             data.success = data.success == 'Success'
             return data
 
-    def api_name(self):
-        return 'Products'
-
-    def build_params(self, doc, market_id='US'):
+    def build_params(self, listing=None, market_id=None):
         return {
             'MarketplaceId': market_id if len(market_id) > 2 else mws.MARKETID[market_id],
-            **mws.structured_list('ASINList', 'ASIN', [doc['sku']]),
+            **mws.structured_list('ASINList', 'ASIN', [listing['sku']]),
         }
 
     def process_response(self, args, kwargs, response):
-        doc = args[0] if args else kwargs['doc']
+        listing = kwargs['listing']
 
         if response.success:
             price = response.landed_price or (response.listing_price + response.shipping)
 
             if price:
-                doc['price'] = price
+                listing['price'] = price
 
-            doc['offers'] = response.offers
+            listing['offers'] = response.offers
 
-        return doc
+        self.context['listing'] = listing
+        return listing
 
 
 ########################################################################################################################
 
 
 class ListInventorySupply(MWSActor):
+    api_name = 'FulfillmentInventory'
 
-    class Schema(MWSResponseSchema):
+    class Schema(mm.Schema):
+        """Parameter schema for ListInventorySupply."""
+        seller_skus = mmf.List(mmf.String(), missing=None, title='Seller SKUs')
+        start = core.DateTimeField(missing=None, title='Start date')
+        market_id = mmf.String(missing='US', title='Market ID')
+
+    class ResponseSchema(MWSResponseSchema):
+        """Response schema for ListInventorySupply."""
 
         class SupplySchema(xm.Schema):
             ignore_missing = True
@@ -171,9 +204,6 @@ class ListInventorySupply(MWSActor):
 
         items = xm.Field('.//member', SupplySchema(), many=True, default=list)
         next_token = xm.String('.//NextToken', default=None)
-
-    def api_name(self):
-        return 'FulfillmentInventory'
 
     def build_params(self, *, seller_skus=None, start=None, market_id='US'):
         if seller_skus is None and start is None:
@@ -211,8 +241,20 @@ class ListInventorySupply(MWSActor):
 
 
 class ListInboundShipments(MWSActor):
+    """Fetch data on shipment from a vendor into FBA inventory."""
+    api_name = 'FulfillmentInboundShipment'
 
-    class Schema(MWSResponseSchema):
+    class Schema(mm.Schema):
+        """Parameter schema for ListInboundShipments."""
+        status = mmf.List(mmf.String(), title='List of statuses.', missing=('WORKING', 'SHIPPED', 'IN_TRANSIT',
+                                                                            'DELIVERED', 'CHECKED_IN', 'RECEIVING',
+                                                                            'CLOSED', 'CANCELLED'))
+        shipment_ids = mmf.List(mmf.String(), missing=[], title='Shipment ID')
+        updated_after = core.DateTimeField(missing=lambda: datetime.utcnow() - timedelta(days=90), title='Updated after')
+        updated_before = core.DateTimeField(missing=datetime.utcnow, title='Updated before')
+
+    class ResponseSchema(MWSResponseSchema):
+        """Response schema for ListInboundShipments."""
 
         class ShipmentSchema(xm.Schema):
             ignore_missing = True
@@ -235,25 +277,15 @@ class ListInboundShipments(MWSActor):
         items = xm.Field('.//member', ShipmentSchema(), many=True, default=list)
         next_token = xm.String('.//NextToken', default=None)
 
-    def api_name(self):
-        return 'FulfillmentInboundShipment'
-
     def build_params(self, *, status=None, shipment_id=None, updated_after=None, updated_before=None):
-        if updated_after is None and updated_before is None:
-            updated_after = (datetime.utcnow() - timedelta(days=90)).strftime(ISO_8601)
-            updated_before = datetime.utcnow().strftime(ISO_8601)
-
-        status = [status] if isinstance(status, str) else status
-        if status is None:
-            status = ('WORKING', 'SHIPPED', 'IN_TRANSIT', 'DELIVERED', 'CHECKED_IN', 'RECEIVING', 'CLOSED', 'CANCELLED')
-        status_list = mws.structured_list('ShipmentStatusList', 'member', status) if status else {}
+        status_list = mws.structured_list('ShipmentStatusList', 'member', status)
 
         shipment_id = [shipment_id] if isinstance(shipment_id, str) else shipment_id
         shipment_id_list = mws.structured_list('ShipmentIdList', 'member', shipment_id) if shipment_id else {}
 
         return {k: v for k, v in {
-            'LastUpdatedAfter': updated_after,
-            'LastUpdatedBefore': updated_before,
+            'LastUpdatedAfter': updated_after.strftime(ISO_8601),
+            'LastUpdatedBefore': updated_before.strftime(ISO_8601),
             **status_list,
             **shipment_id_list
         }.items() if v is not None}
@@ -278,7 +310,7 @@ class ListInboundShipments(MWSActor):
 
 class ListInboundShipmentItems(MWSActor):
 
-    class Schema(MWSResponseSchema):
+    class ResponseSchema(MWSResponseSchema):
 
         class ShipmentSchema(xm.Schema):
 
@@ -324,7 +356,7 @@ class ListInboundShipmentItems(MWSActor):
 
 class GetTransportContent(MWSActor):
 
-    class Schema(MWSResponseSchema):
+    class ResponseSchema(MWSResponseSchema):
 
         class PackageSchema(xm.Schema):
             ignore_missing = True
@@ -353,14 +385,16 @@ class GetTransportContent(MWSActor):
         return {'ShipmentId': doc['order_number']}
 
     def process_response(self, args, kwargs, response):
-        print(response)
         order_doc = {
             'shipping': response.shipping,
             'transport_status': response.transport_status
         }
         results = response.packages
 
-        return order_doc, results
+        return {
+            'order': order_doc,
+            'shipments': results
+        }
 
 
 ########################################################################################################################
@@ -368,7 +402,7 @@ class GetTransportContent(MWSActor):
 
 class ListOrders(MWSActor):
 
-    class Schema(MWSResponseSchema):
+    class ResponseSchema(MWSResponseSchema):
 
         class OrderSchema(xm.Schema):
             ignore_missing = True
@@ -461,7 +495,7 @@ class GetOrder(MWSActor):
 
 class ListOrderItems(MWSActor):
 
-    class Schema(MWSResponseSchema):
+    class ResponseSchema(MWSResponseSchema):
 
         class OrderItemSchema(xm.Schema):
             ignore_missing = True
@@ -505,7 +539,7 @@ class ListOrderItems(MWSActor):
 
 class ListFinancialEventGroups(MWSActor):
 
-    class Schema(MWSResponseSchema):
+    class ResponseSchema(MWSResponseSchema):
 
         class EventGroupSchema(xm.Schema):
             ignore_missing = True
@@ -584,7 +618,7 @@ class Promotion(xm.Schema):
 
 class ListFinancialEvents(MWSActor):
 
-    class Schema(MWSResponseSchema):
+    class ResponseSchema(MWSResponseSchema):
 
         class ShipmentEvent(xm.Schema):
             ignore_missing = True

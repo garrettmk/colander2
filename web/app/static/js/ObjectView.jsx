@@ -1,18 +1,23 @@
 import React from "react";
 import marked from "marked";
 
-import Colander from "./colander";
-import { DocumentContext, NestedDocProvider, EditableDocProvider } from "./Context/DocumentContext";
-import { ModelProvider } from "./Context/ModelProvider";
-import { CollectionProvider } from "./Context/CollectionContext";
-import { QueryContext, QueryProvider } from "./Context/QueryContext";
-import { PreviewProvider } from "./Context/PreviewProvider";
-import ObjectTable from "./Objects/ObjectTable"
-import ObjectPreview from "./Objects/ObjectPreview";
-import ObjectProperties from "./Objects/ObjectProperties";
-import ObjectHeader from "./Objects/ObjectHeader";
+import { Grid, Segment, Container, Image, Header, Button, Message, Divider, Select, Menu,
+         Tab, Icon, Dropdown } from "semantic-ui-react";
 
-import { Grid, Segment, Image, Header, Button, Message, Divider, Select, Menu } from "semantic-ui-react";
+import Colander from "./colander";
+import { DocumentContext, NestedDocProvider, EditableDocProvider, ModelProvider, CollectionProvider,
+         QueryContext, QueryProvider, SimilarProvider, PreviewProvider } from "./Contexts";
+import { ObjectTable, ObjectPreview, ObjectProperties, ObjectHeader, ObjectImage } from "./Objects";
+import { defaultImages } from "./style";
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+const bottomMenuStyle = {
+    borderRadius: 0,
+    marginTop: 0
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +116,15 @@ class TaskCreator extends React.Component {
                                             </EditableDocProvider>
 
                                             {message &&
-                                            <Message error={!msgSuccess}>{message}</Message>
+                                                <Message
+                                                    error={!msgSuccess}
+                                                >
+                                                    {message}
+                                                    <Button basic onClick={() => this.setState({ message: undefined })}>
+                                                        <Icon name={'check'}/>
+                                                        Ok
+                                                    </Button>
+                                                </Message>
                                             }
                                         </React.Fragment>
                                     }
@@ -133,33 +146,55 @@ export function ListingDetails (props) {
     return (
         <DocumentContext.Consumer>
             { ({ doc, loading }) => {
-                const bodyContent = marked.parse(doc.features || doc.description || '(no description)', {sanitize: true});
+                const featuresContent = marked.parse(doc.features || '(no features)', { sanitize: true });
+                const descriptionContent = marked.parse(doc.description || '(no description)', {sanitize: true});
+                const contentStyle = { height: '36em', overflow: 'scroll' };
+                const paneStyle = { border: 'none' };
+
+                let panes = [];
+
+                if (doc && doc.features)
+                    panes.push({
+                        menuItem: 'Features',
+                        render: () => (
+                            <Tab.Pane style={paneStyle}>
+                                <div
+                                    dangerouslySetInnerHTML={{ __html: featuresContent }}
+                                    style={contentStyle}
+                                />
+                            </Tab.Pane>
+                        )
+                    });
+
+                if (doc && doc.description)
+                    panes.push({
+                        menuItem: 'Description',
+                        render: () => (
+                            <Tab.Pane style={paneStyle}>
+                                <div
+                                    dangerouslySetInnerHTML={{ __html: descriptionContent }}
+                                    style={contentStyle}
+                                />
+                            </Tab.Pane>
+                        )
+                    });
+
+                if (doc && doc.image_url)
+                    panes.push({
+                        menuItem: 'Images',
+                        render: () => (
+                            <Tab.Pane style={paneStyle}>
+                                <Image src={doc && doc.image_url} size={'large'}/>
+                            </Tab.Pane>
+                        )
+                    });
 
                 return (
                     <Segment raised>
-                        <Grid divided={'vertically'}>
-                            <Grid.Row>
-                                <Grid.Column width={16}>
-                                    <Header>
-                                        {doc && (doc.title || '(no title)')}
-                                    </Header>
-                                </Grid.Column>
-                            </Grid.Row>
-                            <Grid.Row>
-                                <Grid.Column width={8}>
-                                    <Image src={doc && doc.image_url} size={'large'}/>
-                                </Grid.Column>
-                                <Grid.Column width={8}>
-                                    <div
-                                        dangerouslySetInnerHTML={{ __html: bodyContent }}
-                                        style={{
-                                            height: '36em',
-                                            overflowY: 'scroll'
-                                        }}
-                                    />
-                                </Grid.Column>
-                            </Grid.Row>
-                        </Grid>
+                        <Tab
+                            menu={{ secondary: true, pointing: true }}
+                            panes={panes}
+                        />
                     </Segment>
                 )
             }}
@@ -171,99 +206,180 @@ export function ListingDetails (props) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-export default function ObjectView (props) {
-    let view = {}, column1, column2;
-    let { type, id } = props.match.params;
-    ({ type, id } = {
-        type,
-        id: parseInt(id)
-    });
+export default class ObjectView extends React.Component {
 
-    switch (type) {
-        case 'Vendor':
-            view = { extension: { _exclude: []} };
-            column1 = (
-                <React.Fragment>
-                    <PreviewProvider type={type} id={id}>
-                        <ObjectHeader/>
-                    </PreviewProvider>
-
-                    <ObjectProperties
-                        only={['name', 'url', 'image_url', 'ext_id', 'avg_shipping', 'avg_tax']}
-                    />
-
-                    <NestedDocProvider node={'extension'}>
-                        <DocumentContext.Consumer>
-                            { ({ doc }) => doc ? <TaskCreator/> : <React.Fragment/>}
-                        </DocumentContext.Consumer>
-                    </NestedDocProvider>
-                </React.Fragment>
-            );
-            column2 = (
-                <React.Fragment>
-                    <QueryProvider type={'Listing'} query={{ vendor_id: id }} view={{ vendor: { _only: ['name'] } }}>
-                        <QueryContext.Consumer>
-                            {({ type, query, view }) => (
-                                <CollectionProvider type={type} query={query} view={view}>
-                                    <ObjectTable
-                                        only={['sku', 'Image', 'Summary', 'price']}
-                                        select
-                                    />
-                                </CollectionProvider>
-                            )}
-                        </QueryContext.Consumer>
-                    </QueryProvider>
-                </React.Fragment>
-            );
-            break;
-
-        case 'Listing':
-            view = { vendor: { _only: ['name'] } };
-            column1 = (
-                <React.Fragment>
-                    <PreviewProvider type={type} id={id}>
-                        <ObjectHeader/>
-                    </PreviewProvider>
-
-                    <ObjectProperties
-                        only={['vendor_id', 'sku', 'title', 'brand', 'model', 'price', 'quantity', 'quantity_desc',
-                        'rank', 'rating', 'detail_url', 'image_url']}
-                    />
-                </React.Fragment>
-            );
-
-            column2 = (
-                <React.Fragment>
-                    <ListingDetails/>
-                </React.Fragment>
-            )
+    constructor (props) {
+        super(props);
+        this.sendCoreAction = this.sendCoreAction.bind(this);
+        this.state = { leftColumnRef: undefined }
     }
 
-    return (
-        <ModelProvider {...{ type, id, view}}>
-            <Grid columns={2}>
-                <Grid.Column width={4}>
-                    {column1}
-                </Grid.Column>
-                <Grid.Column width={12}>
-                    {column2}
-                </Grid.Column>
-            </Grid>
+    sendCoreAction (action, params) {
+        return () => {
+            Colander.sendTask({
+                action,
+                params
+            })
+        }
+    }
 
-            <DocumentContext.Consumer>
-                { ({ edits, save }) => (
-                    _.isEmpty(edits)
-                        ? <React.Fragment/>
-                        : <Menu fixed={'bottom'}>
-                            <Menu.Item>
-                                <Button primary onClick={save}>Save</Button>
+    render ()  {
+        let view = {}, column1, column2, actions = () => [];
+        let { type, id } = this.props.match.params;
+        ({ type, id } = {
+            type,
+            id: parseInt(id)
+        });
+
+        switch (type) {
+            case 'Vendor':
+                view = { extension: { _exclude: []} };
+                column1 = (
+                    <React.Fragment>
+                        <PreviewProvider type={type} id={id}>
+                            <ObjectImage/>
+                        </PreviewProvider>
+
+                        <ObjectProperties
+                            only={['name', 'url', 'image_url', 'ext_id', 'avg_shipping', 'avg_tax', 'extra']}
+                        />
+
+                        <NestedDocProvider node={'extension'}>
+                            <DocumentContext.Consumer>
+                                { ({ doc }) => doc ? <TaskCreator/> : <React.Fragment/>}
+                            </DocumentContext.Consumer>
+                        </NestedDocProvider>
+                    </React.Fragment>
+                );
+
+                column2 = (
+                    <React.Fragment>
+                        <QueryProvider type={'Listing'} query={{ vendor_id: id }} view={{ vendor: { _only: ['name'] } }}>
+                            <QueryContext.Consumer>
+                                {({ type, query, view }) => (
+                                        <CollectionProvider type={type} query={query} view={view}>
+                                            <ObjectTable
+                                                only={['sku', 'Image', 'Summary', 'price']}
+                                                select
+                                            />
+                                        </CollectionProvider>
+                                )}
+                            </QueryContext.Consumer>
+                        </QueryProvider>
+                    </React.Fragment>
+                );
+
+                actions = doc => [
+                    <Dropdown.Item key={1} onClick={this.sendCoreAction('ImportInventory', { vendor_id: doc.id })}>
+                        Import inventory
+                    </Dropdown.Item>
+                ];
+
+                break;
+
+            case 'Listing':
+                view = { vendor: { _only: ['name'] } };
+                column1 = (
+                    <React.Fragment>
+                        <PreviewProvider type={type} id={id}>
+                            <ObjectImage/>
+                        </PreviewProvider>
+
+                        <ObjectProperties
+                            only={['vendor_id', 'sku', 'title', 'brand', 'model', 'price', 'quantity', 'quantity_desc',
+                            'rank', 'rating', 'detail_url', 'image_url', 'extra']}
+                        />
+                    </React.Fragment>
+                );
+
+                column2 = (
+                    <React.Fragment>
+                        <ListingDetails/>
+                        <SimilarProvider id={id} view={{ vendor: { _only: ['name'] } }}>
+                            <Segment raised>
+                                <Header>
+                                    Similar Listings
+                                </Header>
+                                <ObjectTable
+                                    as={'div'}
+                                    only={['Score', 'Vendor/SKU', 'Image', 'Summary', 'price']}
+                                    select
+                                />
+                            </Segment>
+                        </SimilarProvider>
+                    </React.Fragment>
+                );
+
+                actions = doc => [
+                    <Dropdown.Item key={1} onClick={this.sendCoreAction('ImportMatchingListings', { listing_ids: [doc.id] })}>
+                        Find matching listings
+                    </Dropdown.Item>,
+                ];
+
+                break;
+        }
+
+        return (
+            <ModelProvider {...{ type, id, view}}>
+                <DocumentContext.Consumer>
+                    { ({ doc }) => (
+                        <Menu inverted color='grey' style={bottomMenuStyle}>
+
+                            <Menu.Item header>
+                                <Image size={'mini'} src={defaultImages[type].dark}/>
                             </Menu.Item>
+
                             <Menu.Item>
-                                <Button basic>Cancel</Button>
+                                <Header inverted as={'h2'}>
+                                    {doc.name || doc.title || '(no title)'}
+                                </Header>
                             </Menu.Item>
+
+                            {(doc.url || doc.detail_url) &&
+                                <Menu.Item href={doc.url || doc.detail_url} target={'_blank'}>
+                                    <Icon name={'external'}/>
+                                </Menu.Item>
+                            }
+
+                            {actions && (
+                                <Menu.Item>
+                                    <Dropdown item icon={'settings'}>
+                                        <Dropdown.Menu>
+                                            {actions(doc)}
+                                        </Dropdown.Menu>
+                                    </Dropdown>
+                                </Menu.Item>
+                            )}
+
                         </Menu>
-                )}
-            </DocumentContext.Consumer>
-        </ModelProvider>
-    );
+                    )}
+                </DocumentContext.Consumer>
+                <Container fluid style={{ paddingLeft: '5em', paddingRight: '5em'}}>
+                    <Grid columns={2}>
+                        <Grid.Column width={4}>
+                            {column1}
+                        </Grid.Column>
+                        <Grid.Column width={12}>
+                            {column2}
+                        </Grid.Column>
+                    </Grid>
+
+                    <DocumentContext.Consumer>
+                        { ({ edits, save }) => (
+                            _.isEmpty(edits)
+                                ? <React.Fragment/>
+                                : <Menu fixed={'bottom'}>
+                                    <Menu.Item>
+                                        <Button primary onClick={save}>Save</Button>
+                                    </Menu.Item>
+                                    <Menu.Item>
+                                        <Button basic>Cancel</Button>
+                                    </Menu.Item>
+                                </Menu>
+                        )}
+                    </DocumentContext.Consumer>
+            </Container>
+            </ModelProvider>
+        );
+    }
 }

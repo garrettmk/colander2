@@ -7,8 +7,8 @@ import update from "immutability-helper";
 import { Container, Segment, Menu, Search, Dropdown, Sidebar, Header, Button, Dimmer, Loader, Message, Grid } from "semantic-ui-react";
 
 import Colander from "./colander";
-import { DocumentContext, EditableDocProvider } from "./Context/DocumentContext";
-import ObjectProperties from "./Objects/ObjectProperties";
+import { DocumentContext, EditableDocProvider } from "./Contexts";
+import { ObjectProperties, ObjectSearchBox } from "./Objects";
 import ObjectView from "./ObjectView";
 
 
@@ -17,7 +17,8 @@ import ObjectView from "./ObjectView";
 
 const menuStyle = {
     borderRadius: 0,
-    height: '5em'
+    height: '5em',
+    marginBottom: 0
 };
 
 const sidebarStyle = {
@@ -40,6 +41,11 @@ const sidebarContentStyle = {
     overflow: 'auto'
 };
 
+const contentStyle = {
+    padding: 0,
+    margin: 0
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +57,7 @@ class CreatorSidebar extends React.Component {
 
         this.fetchSchema = this.fetchSchema.bind(this);
         this.handleSave = this.handleSave.bind(this);
-        this.handleCancel = this.handleCancel.bind(this);
+        this.handleClose = this.handleClose.bind(this);
 
         this.state = {
             loading: false,
@@ -86,7 +92,7 @@ class CreatorSidebar extends React.Component {
 
     handleSave (edits) {
         const { doc } = this.state;
-        const { onClose = () => {} } = this.props;
+        const { type, onCreated } = this.props;
 
         this.setState({ loading: true });
 
@@ -95,10 +101,10 @@ class CreatorSidebar extends React.Component {
 
             onSuccess: results => {
                 if (results.errors) {
-                    this.setState({ loading: false, errors })
+                    this.setState({ loading: false, errors: result.errors })
                 } else {
                     this.setState({ loading: false, doc: {}, errors: {} });
-                    onClose();
+                    onCreated && onCreated(results.id);
                 }
             },
 
@@ -108,7 +114,7 @@ class CreatorSidebar extends React.Component {
         })
     }
 
-    handleCancel () {
+    handleClose () {
         const { onClose } = this.props;
         onClose && onClose();
     }
@@ -156,11 +162,12 @@ class CreatorSidebar extends React.Component {
                                     <Grid.Column>
                                         <Message error hidden={_.isEmpty(errors)}>
                                             <DocumentContext.Consumer>
-                                                { ({ errors }) => Object.keys(errors).map(err =>
-                                                    <li key={err}>
-                                                        <b>{err}</b>: {errors[err]}
-                                                    </li>
-                                                )}
+                                                { ({ errors }) => <pre>{errors ? JSON.stringify(errors, null, '  ') : errors }</pre>}
+                                                {/*{ ({ errors }) => Object.keys(errors).map(err =>*/}
+                                                    {/*<li key={err}>*/}
+                                                        {/*<b>{err}</b>: {errors[err]}*/}
+                                                    {/*</li>*/}
+                                                {/*)}*/}
                                             </DocumentContext.Consumer>
                                         </Message>
                                     </Grid.Column>
@@ -178,7 +185,7 @@ class CreatorSidebar extends React.Component {
                         <DocumentContext.Consumer>
                             { ({ save }) => (
                                 <React.Fragment>
-                                    <Button onClick={this.handleCancel}>Cancel</Button>
+                                    <Button onClick={this.handleClose}>Cancel</Button>
                                     <Button onClick={save} loading={loading}>Create</Button>
                                 </React.Fragment>
                             )}
@@ -193,7 +200,9 @@ class CreatorSidebar extends React.Component {
 
 CreatorSidebar.propTypes = {
     type: PropTypes.string.isRequired,
-    visible: PropTypes.bool
+    visible: PropTypes.bool,
+    onCreated: PropTypes.func,
+    onClose: PropTypes.func,
 };
 
 
@@ -209,7 +218,7 @@ class App extends React.Component {
         this.handleResultSelect = this.handleResultSelect.bind(this);
         this.hideSidebar = this.hideSidebar.bind(this);
         this.openCreator = this.openCreator.bind(this);
-        this.fetchResults = _.debounce(this.fetchResults, 300, {trailing: true});
+        this.fetchResults = _.debounce(this.fetchResults.bind(this), 300, {trailing: true});
 
         this.state = {
             loading: false,
@@ -228,8 +237,9 @@ class App extends React.Component {
         })
     }
 
-    fetchResults (query) {
-        this.setState({ loading: true, query });
+    fetchResults () {
+        this.setState({ loading: true });
+        const { query } = this.state;
 
         Colander.preview({
             query,
@@ -240,14 +250,16 @@ class App extends React.Component {
     }
 
     handleQueryChange (e, { value }) {
-        if (!value)
-            return this.reset();
-
-        this.fetchResults(value);
+        if (!value) {
+            this.reset()
+        } else {
+            this.setState({query: value});
+            this.fetchResults();
+        }
     }
 
-    handleResultSelect (e, data) {
-        const url = `/${data.result.type}/${data.result.id}`;
+    handleResultSelect (result) {
+        const url = `/${result.type}/${result.id}`;
         this.props.history.push(url);
     }
 
@@ -267,8 +279,8 @@ class App extends React.Component {
                 <CreatorSidebar
                     type={creatorType}
                     visible={sidebarVisible}
-                    onCreated={id => alert(id)}
-                    onCancel={this.hideSidebar}
+                    onCreated={id => {this.hideSidebar(); this.props.history.push(`/${creatorType}/${id}`)}}
+                    onClose={this.hideSidebar}
                 />
                 <Sidebar.Pusher dimmed={sidebarVisible} onClick={() => this.setState({ sidebarVisible: false })}>
                     <Menu inverted style={menuStyle}>
@@ -286,18 +298,22 @@ class App extends React.Component {
                             </Dropdown>
                         </Menu.Item>
                         <Menu.Item>
-                            <Search
-                                category
-                                aligned={'right'}
-                                loading={loading}
-                                onSearchChange={this.handleQueryChange}
+                            <ObjectSearchBox
                                 onResultSelect={this.handleResultSelect}
-                                results={results}
-                                value={query}
+                                aligned={'right'}
                             />
+                            {/*<Search*/}
+                                {/*category*/}
+                                {/*aligned={'right'}*/}
+                                {/*loading={loading}*/}
+                                {/*onSearchChange={this.handleQueryChange}*/}
+                                {/*onResultSelect={this.handleResultSelect}*/}
+                                {/*results={results}*/}
+                                {/*value={query}*/}
+                            {/*/>*/}
                         </Menu.Item>
                     </Menu>
-                    <Container fluid style={{ paddingLeft: '5em', paddingRight: '5em'}}>
+                    <Container fluid style={contentStyle}>
                         <Route path={'/:type/:id'} component={ObjectView}/>
                     </Container>
                 </Sidebar.Pusher>

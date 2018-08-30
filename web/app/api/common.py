@@ -1,16 +1,8 @@
 import functools
-
-from flask_restful import Resource
-
-from app import db
+import flask_restful as fr
 
 
 ########################################################################################################################
-
-
-model_types = {
-    t.__name__.lower(): t for t in db.Model.all_subclasses()
-}
 
 
 def format_response(func):
@@ -31,6 +23,9 @@ def format_response(func):
     return wrapper
 
 
-class ColanderResource(Resource):
+########################################################################################################################
+
+
+class ColanderResource(fr.Resource):
     """Base class for all API resources."""
     method_decorators = [format_response]

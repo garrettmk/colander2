@@ -1,3 +1,5 @@
+from .app import app, db, search
+
 from .models import (
     URL,
     CURRENCY,
@@ -6,10 +8,15 @@ from .models import (
     to_snake_case,
     filter_with_json,
     Base,
-    ColanderJSONEncoder
+    ColanderJSONEncoder,
+    DateTimeField,
+    all_subclasses
 )
 
 __all__ = (
+    'app',
+    'db',
+    'search',
     'URL',
     'CURRENCY',
     'JSONB',
@@ -17,5 +24,6 @@ __all__ = (
     'to_snake_case',
     'filter_with_json',
     'Base',
-    'ColanderJSONEncoder'
+    'ColanderJSONEncoder',
+    'all_subclasses'
 )

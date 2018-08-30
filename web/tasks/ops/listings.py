@@ -1,68 +1,86 @@
 from urllib.parse import urlparse
 
-from models.entities import Vendor
-from models.listings import Listing, QuantityMap, Inventory
-from models.orders import Order, OrderItem
-from models.finances import OrderEvent, OrderItemEvent, FinancialAccount
-from models.relationships import Opportunity, OpportunitySource
+import marshmallow as mm
+import marshmallow.fields as mmf
 
-from .common import db, ops_actor, search
+from models import Listing, Vendor
+
+from .common import db, OpsActor, search
 
 
 ########################################################################################################################
 
 
-@ops_actor
-def test(message=None):
-    print(f'This was a test: {message}')
+class ImportListing(OpsActor):
+    """Import a JSON document into the database as a listing."""
+    public = True
+
+    class Schema(mm.Schema):
+        """Parameter schema for ImportListing."""
+        class ListingSchema(mm.Schema):
+            sku = mmf.String(required=True, title='Listing SKU')
+            vendor_id = mmf.Int(title='Vendor ID')
+            detail_url = mmf.Url(title='Detail page URL')
+
+            @mm.decorators.validates_schema()
+            def validate(self, data):
+                if 'vendor_id' not in data and 'detail_url' not in data:
+                    raise mm.exceptions.ValidationError('Missing required field: vendor_id or detail_url')
+
+        listing = mmf.Nested(ListingSchema, required=True, title='Listing document')
+
+    def perform(self, listing=None):
+        doc = listing
+
+        # Do some basic cleaning
+        for field, value in doc.items():
+            if isinstance(value, str):
+                doc[field] = value.strip()
+
+        # Try to locate the listing in the database
+        sku = doc.pop('sku')
+        vendor_id = doc.pop('vendor_id', None)
+
+        if vendor_id is None:
+            netloc = urlparse(doc['detail_url'])[1]
+            vendor = Vendor.query.filter(Vendor.url.ilike(f'%{netloc}%')).one()
+            vendor_id = vendor.id
+
+        listing = Listing.query.filter_by(vendor_id=vendor_id, sku=sku).one_or_none()\
+                    or Listing(vendor_id=vendor_id, sku=sku)
+
+        # Update and commit
+        listing.update(doc)
+        db.session.add(listing)
+        db.session.commit()
+
+        return listing.id
 
 
-@ops_actor
-def import_listing_default(doc):
-    """Imports a JSON map into the database as a listing."""
-    # Check for required fields
-    assert 'vendor_id' in doc or 'detail_url' in doc, 'vendor_id or detail_url required.'
-    assert 'sku' in doc, 'sku required'
-
-    # Do some basic cleaning
-    for field, value in doc.items():
-        if isinstance(value, str):
-            doc[field] = value.strip()
-
-    # Try to locate the product in the database
-    sku = doc.pop('sku')
-    vendor_id = doc.pop('vendor_id', None)
-    if vendor_id:
-        vendor = Vendor.query.filter_by(id=vendor_id).one()
-    else:
-        netloc = urlparse(doc['detail_url'])[1]
-        vendor = Vendor.query.filter(Vendor.url.ilike(f'%{netloc}%')).one()
-        vendor_id = vendor.id
-
-    listing = Listing.query.filter_by(vendor_id=vendor_id, sku=sku).one_or_none()\
-              or Listing(vendor_id=vendor_id, sku=sku)
-
-    # Update and commit
-    listing.update(doc)
-    db.session.add(listing)
-    db.session.commit()
-
-    return listing.id
+########################################################################################################################
 
 
-@ops_actor
-def import_matching_listings(listing_ids):
-    """Import matching listings from the vendors."""
-    vendors = Vendor.query.all()
-    listings = Listing.query.filter(Listing.id.in_(listing_ids)).all()
+class ImportMatchingListings(OpsActor):
+    """Import matching listings from all the vendors."""
+    public = True
 
-    for listing in listings:
+    class Schema(mm.Schema):
+        listing_ids = mmf.List(mmf.Int(), required=True, title='Listing IDs')
+
+    def perform(self, listing_ids=None):
+        vendors = Vendor.query.all()
+
         for vendor in vendors:
-            if vendor.extension and hasattr(vendor.extension, 'import_matches'):
-                vendor.extension.import_matches.send(listing.id)
+            try:
+                for listing_id in listing_ids:
+                    vendor.extension.send('ImportMatches', context={'listing_id': listing_id})
+            except (TypeError, ValueError, AttributeError):
+                continue
 
-    return listing_ids
+        return listing_ids
 
+
+########################################################################################################################
 
 
 # @ops_actor

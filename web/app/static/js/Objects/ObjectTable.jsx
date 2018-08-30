@@ -5,11 +5,9 @@ import update from "immutability-helper";
 
 import { Segment, Table, Checkbox, Image, Icon, Pagination } from "semantic-ui-react";
 
-import { QueryContext } from "../Context/QueryContext";
-import { DocumentContext } from "../Context/DocumentContext";
-import { CollectionContext, IndexProvider } from "../Context/CollectionContext";
-
+import { DocumentContext, QueryContext, CollectionContext, SelectionContext, IndexProvider } from "../Contexts";
 import { asCount, asCurrency, asPercent } from "../style";
+import { defaultImages } from "../style";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +56,7 @@ function HeaderCell (props) {
                 return (
                     <QueryContext.Consumer>
                         { ({ query, updateQuery }) => {
-                            const direction = query._sort && query._sort[path];
+                            const direction = query && query._sort && query._sort[path];
                             const otherDirection = direction === 'ascending' ? 'descending' : 'ascending';
                             const handleSort = () => updateQuery(update(query, {$merge: { _sort: { [path]: otherDirection}}}));
 
@@ -99,16 +97,23 @@ function valueFromPath(doc, path) {
 const customFields = {
     Listing: {
         Vendor: obj => obj && obj.vendor ? obj.vendor.name : 'n/a',
-        Image: obj => <Image src={obj.image_url} size={'tiny'}/>,
+        'Vendor/SKU': obj => (
+            <span>
+                <b>{obj.vendor.name}</b><br/>
+                {obj.sku}
+            </span>
+        ),
+        Image: obj => <Image src={obj.image_url || defaultImages[obj.type].light} size={'tiny'}/>,
         Summary: obj => (
             <div>
                 <Link to={`/Listing/${obj.id}`}>{obj.title}</Link>
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
-                    <b>Category: </b>{obj.category || 'n/a'}
-                    <b>Rank: </b>{obj.rank || 'n/a'}
+                    <span style={{ marginRight: '3em'}}><b>Category: </b>{obj.category || 'n/a'}</span>
+                    <span><b>Rank: </b>{obj.rank || 'n/a'}</span>
                 </div>
             </div>
         ),
+        Score: obj => asPercent(obj._score)
     }
 };
 
@@ -191,8 +196,8 @@ function SelectCell (props) {
     const { header } = props;
 
     return (
-        <CollectionContext.Consumer>
-            { ({ selection, toggleSelected }) => (
+        <SelectionContext.Consumer>
+            { ({ ids, toggleSelected }) => (
                 <DocumentContext.Consumer>
                     { ({ doc }) => (
                         React.createElement(
@@ -200,14 +205,14 @@ function SelectCell (props) {
                             null,
                             <Checkbox
                                 disabled={!doc}
-                                checked={doc && selection.has(doc.id)}
+                                checked={doc && ids.has(doc.id)}
                                 onChange={() => toggleSelected([doc.id])}
                             />
                         )
                     )}
                 </DocumentContext.Consumer>
             )}
-        </CollectionContext.Consumer>
+        </SelectionContext.Consumer>
     )
 }
 
@@ -215,8 +220,14 @@ function SelectCell (props) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-export default function ObjectTable (props) {
+export function ObjectTable (props) {
     let { as, asProps, only, exclude, tableProps, select } = props;
+
+    if (!as) {
+        as = Segment;
+        if (asProps.raised === undefined)
+            asProps.raised = true;
+    }
 
     return (
         <CollectionContext.Consumer>
@@ -224,9 +235,10 @@ export default function ObjectTable (props) {
                 const schema = coll.schemas[coll.type];
                 const { properties = {}, required = [], } = schema || {};
                 const fields = (only || Object.keys(properties)).filter(key => !exclude.includes(key));
+                const columnCount = fields.length + (select ? 1 : 0);
 
-                return React.createElement(Segment, asProps,
-                    coll.loadingCollection || !schema
+                return React.createElement(as, asProps,
+                    coll.loading || !schema
                         ? <React.Fragment/>
                         : <Table sortable selectable {...tableProps}>
                             <Table.Header>
@@ -238,25 +250,33 @@ export default function ObjectTable (props) {
                                 </Table.Row>
                             </Table.Header>
                             <Table.Body>
-                                {coll.items.map((obj, idx) => (
-                                    <Table.Row key={obj.id}>
-                                        <IndexProvider index={idx}>
-                                            {select && <SelectCell/>}
-                                            {fields.map(field => <Cell key={field} field={field}/>)}
-                                        </IndexProvider>
+                                {coll.items.length
+                                    ? coll.items.map((obj, idx) => (
+                                        <Table.Row key={obj.id}>
+                                            <IndexProvider index={idx}>
+                                                {select && <SelectCell/>}
+                                                {fields.map(field => <Cell key={field} field={field}/>)}
+                                            </IndexProvider>
+                                        </Table.Row>
+                                    ))
+                                    : <Table.Row>
+                                        {select && <Table.Cell/>}
+                                        <Table.Cell colSpan={columnCount}>
+                                            No items to display.
+                                        </Table.Cell>
                                     </Table.Row>
-                                ))}
+                                }
                             </Table.Body>
                             <Table.Footer>
                                 <Table.Row>
-                                    <Table.HeaderCell textAlign={'right'} colSpan={fields.length + (select ? 1 : 0)}>
+                                    <Table.HeaderCell textAlign={'right'} colSpan={columnCount}>
                                         <QueryContext.Consumer>
-                                            { ({ view, updateView }) => (
+                                            { ({ view, setView }) => (
                                                 <Pagination
                                                     totalPages={coll.pages}
                                                     activePage={coll.page}
                                                     onPageChange={(e, { activePage }) =>
-                                                        updateView(
+                                                        setView(
                                                             update(
                                                                 view,
                                                                 {$merge: {
@@ -291,7 +311,7 @@ ObjectTable.propTypes = {
 
 
 ObjectTable.defaultProps = {
-    as: 'Segment',
+    as: Segment,
     asProps: { raised: true },
     only: undefined,
     exclude: [],

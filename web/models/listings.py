@@ -8,8 +8,7 @@ import marshmallow as mm
 import marshmallow.fields as mmf
 import flask_sqlalchemy
 
-from app import db
-from core import URL, CURRENCY, quantize_decimal
+from core import db, search, URL, CURRENCY, quantize_decimal
 
 from .mixins import SearchMixin
 from .entities import Vendor
@@ -152,7 +151,7 @@ class Listing(db.Model, SearchMixin):
     description = jb.Column(db.Text, label='Description')
     detail_url = jb.Column(URL, label='Detail page URL', format='url')
     image_url = jb.Column(URL, label='Image URL', format='url')
-    last_modified = jb.Column(db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow(), label='Last modified')
+    last_modified = jb.Column(db.DateTime, default=lambda: str(datetime.utcnow()), onupdate=datetime.utcnow, label='Last modified')
 
     __table_args__ = (sa.UniqueConstraint('vendor_id', 'sku'),)
 
@@ -223,6 +222,58 @@ class Listing(db.Model, SearchMixin):
 
         for listing in new_listings + mod_listings:
             listing.guess_quantity()
+
+
+    # Custom search methods
+
+    def similarity_query(self):
+        brand, model, title = self.brand, self.model, self.title
+        brand_match, model_match, title_match = None, None, None
+
+        if brand:
+            brand_match = {
+                'multi_match': {
+                    'query': brand,
+                    'fuzziness': 'AUTO',
+                    'fields': ['brand^2', 'title']
+                }
+            }
+
+        if model:
+            model_match = {
+                'multi_match': {
+                    'query': model,
+                    'fuzziness': 'AUTO',
+                    'fields': ['model^3', 'title']
+                }
+            }
+
+        if title:
+            title_match = {
+                'multi_match': {
+                    'query': title,
+                    'fuzziness': 'AUTO',
+                    'fields': ['brand^2', 'model^3', 'title']
+                }
+            }
+
+        if model_match:
+            must = [model_match]
+            should = [m for m in (brand_match, title_match) if m is not None]
+        elif brand_match:
+            must = [brand_match]
+            should = [title_match] if title_match else []
+        elif title_match:
+            must = [title_match]
+            should = []
+        else:
+            must, should = [], []
+
+        return {
+            'must': must,
+            'should': should,
+            'must_not': [{'ids': {'values': [self.id]}}]
+        }
 
     # Hybrid properties
 

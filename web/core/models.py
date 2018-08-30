@@ -2,6 +2,7 @@ import re
 import decimal
 import datetime
 import collections
+import itertools
 
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
@@ -9,7 +10,10 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import JSONB
 from flask_sqlalchemy import Model, DefaultMeta
-from marshmallow import fields, Schema, validate
+
+import marshmallow as mm
+import marshmallow.fields as mmf
+
 from flask.json import JSONEncoder
 import sqlalchemy_jsonbase as jb
 
@@ -92,21 +96,24 @@ def filter_with_json(query, js, obj_type=None):
         orderings.append(param)
     query = query.order_by(*orderings)
 
-
     return query
+
+
+def all_subclasses(cls):
+    return [cls] + list(itertools.chain(*(all_subclasses(s) for s in cls.__subclasses__())))
 
 
 ########################################################################################################################
 
 
-class DateTimeField(fields.DateTime):
+class DateTimeField(mmf.DateTime):
     def _deserialize(self, value, attr, data):
         if isinstance(value, datetime.datetime):
             return value
         return super()._deserialize(value, attr, data)
 
 
-class ObjectIdField(fields.Int):
+class ObjectIdField(mmf.Int):
     """Basically an integer field with some extra info."""
 
     def _jsonschema_type_mapping(self):
@@ -147,8 +154,12 @@ class BaseMeta(jb.JsonMetaMixin, DefaultMeta):
 
 class Base(jb.JsonMixin, Model):
     """Custom base class for all models."""
-    extra = sa.Column(JSONB, default=dict, nullable=False)
-    type = sa.Column(sa.String(64), nullable=False)
+    extra = jb.Column(JSONB, default=dict, nullable=False, label='Extra data')
+    type = jb.Column(sa.String(64), nullable=False, label='Object type')
+
+    class __schema__(mm.Schema):
+        extra = mmf.Dict()
+        type = mmf.String()
 
     def __init__(self, *args, **kwargs):
         self.extra = {}
@@ -170,7 +181,7 @@ class Base(jb.JsonMixin, Model):
 
     @classmethod
     def all_subclasses(cls):
-        return cls.__subclasses__() + [g for s in cls.__subclasses__() for g in s.all_subclasses()]
+        return all_subclasses(cls)
 
     @classmethod
     def full_name(cls):

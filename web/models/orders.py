@@ -6,8 +6,7 @@ from datetime import datetime
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import UniqueConstraint
 
-from app import db
-from core import CURRENCY
+from core import db, CURRENCY
 from .mixins import SearchMixin
 from .finances import OrderEvent, OrderItemEvent, InventoryAdjustment
 

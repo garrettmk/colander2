@@ -1,7 +1,7 @@
 from sqlalchemy.ext.declarative import declared_attr
 from flask_sqlalchemy import SignallingSession
 
-from app import db, search
+from core import db, search, all_subclasses
 
 
 ########################################################################################################################
@@ -27,7 +27,6 @@ class PolymorphicMixin:
 
 class SearchMixin:
     """A mixin that enables search indexing and a search function to work alongside SQLAlchemy."""
-    __search_index__ = 'default'
 
     @classmethod
     def before_commit(cls, session):
@@ -56,8 +55,7 @@ class SearchMixin:
     def search(cls, expression, page=1, per_page=10):
         hits, total = search.search(
             expression,
-            index=cls.__search_index__,
-            model_types=[cls] + cls.all_subclasses(),
+            model_types=all_subclasses(cls),
             page=page,
             per_page=per_page
         )
@@ -68,6 +66,26 @@ class SearchMixin:
             return cls.query.filter(cls.id.in_(ids)).order_by(db.case(whens, value=cls.id)), total
         else:
             return cls.query.filter_by(id=0), 0
+
+    def find_similar(self, min_score, page, per_page):
+        """Find similar models."""
+        results, total = search.find_similar(
+            self,
+            min_score=min_score,
+            page=page,
+            per_page=per_page
+        )
+        ids = [r['id'] for r in results]
+        scores = {int(r['id']): r['n_score'] for r in results}
+        whens = [(id, i) for i, id, in enumerate(ids)]
+
+        cls = type(self)
+        if results:
+            query = cls.query.filter(cls.id.in_(ids)).order_by(db.case(whens, value=cls.id))
+        else:
+            query = cls.query.filter_by(id=0)
+
+        return query, total, scores
 
     @classmethod
     def reindex(cls):
