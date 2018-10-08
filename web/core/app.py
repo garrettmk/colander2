@@ -10,7 +10,7 @@ from .models import Base, ColanderJSONEncoder
 ########################################################################################################################
 
 
-app = Flask(__name__, static_folder='static/dist')
+app = Flask(__name__, static_folder='../app/static/dist', template_folder='../app/templates')
 app.config.from_object(Config)
 app.json_encoder = ColanderJSONEncoder
 

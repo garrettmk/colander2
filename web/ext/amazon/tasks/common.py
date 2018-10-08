@@ -202,10 +202,9 @@ class MWSActor(ExtActor):
 
         # Raise an exception if needed
         if response.errors:
-            codes = [e.code for e in response.errors]
-            exc_type = None
-            if 'RequestThrottled' in codes:
-                exc_type = RequestThrottled
+            error = response.errors[0]
+
+            if error.code == 'RequestThrottled':
                 sleep = stretch + limits['restore_rate']
                 expires = int(sleep * 10 * 1000)
                 self.redis.set(
@@ -213,13 +212,13 @@ class MWSActor(ExtActor):
                     sleep,
                     px=expires
                 )
-            elif 'QuotaExceeded' in codes:
-                exc_type = QuotaExceeded
-            elif 'InternalError' in codes:
-                exc_type = InternalError
+                raise RequestThrottled(**error)
 
-            if exc_type:
-                raise exc_type(response.error_type, response.error_code, response.error_message)
+            elif error.code == 'QuotaExceeded':
+                raise QuotaExceeded(**error)
+
+            elif error.code == 'InternalError':
+                InternalError(**error)
 
         return response
 

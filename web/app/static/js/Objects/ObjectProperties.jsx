@@ -263,18 +263,23 @@ export class JsonField extends React.Component {
 
     convertToText () {
         const { json } = this.props;
-        json
-            ? this.setState({ text: JSON.stringify(json, null, '  ') })
-            : this.setState({ text: '' });
+        if (json)
+            this.setState({ text: JSON.stringify(json, null, '  ') });
+        else
+            this.setState({ text: '' });
     }
 
     tryToParse () {
         const { text } = this.state;
         const { onChange } = this.props;
 
+        if (!onChange)
+            return;
+
         try {
             const json = text ? JSON.parse(text) : undefined;
-            onChange && onChange(json)
+            if (!_.isEqual(json, this.props.json))
+                onChange(json)
         } catch (error) { }
     }
 
@@ -329,22 +334,16 @@ export function ObjectProperties (props) {
                     const fields = (only || Object.keys(properties)).filter(key => !exclude.includes(key));
 
                     children = (
-                        <Table basic={'very'}>
-                            <Table.Body>
-                                {fields.map(field => (
-                                    <Table.Row key={field} style={{ borderBottom: '2px gray' }}>
-                                        <Table.Cell>
-                                            <Header size={'tiny'}>
-                                                <FieldLabel field={field}/>
-                                            </Header>
-                                        </Table.Cell>
-                                        <Table.Cell>
-                                            <Field field={field} onChange={edit ? value => edit(field, value) : undefined}/>
-                                        </Table.Cell>
-                                    </Table.Row>
-                                ))}
-                            </Table.Body>
-                        </Table>
+                        <React.Fragment>
+                            {fields.map(field => (
+                                <div key={field} style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px dotted lightgrey', marginBottom: '1em', paddingBottom: '0.3em' }}>
+                                    <Header sub size={'tiny'} color={'grey'} style={{ margin: 0, marginBottom: '0.3em' }}>
+                                        <FieldLabel field={field}/>
+                                    </Header>
+                                    <Field field={field} onChange={edit ? value => edit(field, value) : undefined}/>
+                                </div>
+                            ))}
+                        </React.Fragment>
                     )
                 }
 

@@ -4,12 +4,14 @@ import { Route, withRouter } from "react-router-dom";
 import _ from "lodash";
 import update from "immutability-helper";
 
-import { Container, Segment, Menu, Search, Dropdown, Sidebar, Header, Button, Dimmer, Loader, Message, Grid } from "semantic-ui-react";
+import { Container, Segment, Menu, Search, Dropdown, Sidebar, Header, Button, Dimmer, Loader, Message, Grid,
+    Input } from "semantic-ui-react";
 
 import Colander from "./colander";
 import { DocumentContext, EditableDocProvider } from "./Contexts";
 import { ObjectProperties, ObjectSearchBox } from "./Objects";
 import ObjectView from "./ObjectView";
+import TasksView from "./TasksView";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -285,7 +287,7 @@ class App extends React.Component {
                 <Sidebar.Pusher dimmed={sidebarVisible} onClick={() => this.setState({ sidebarVisible: false })}>
                     <Menu inverted style={menuStyle}>
                         <Menu.Item header>Colander</Menu.Item>
-                        <Menu.Item>Dashboards</Menu.Item>
+                        <Menu.Item onClick={() => this.props.history.push('/tasks')}>Tasks</Menu.Item>
                         <Menu.Item>Search</Menu.Item>
                         <Menu.Item position={'right'}>
                             <Dropdown item text={'Create'}>
@@ -315,6 +317,7 @@ class App extends React.Component {
                     </Menu>
                     <Container fluid style={contentStyle}>
                         <Route path={'/:type/:id'} component={ObjectView}/>
+                        <Route path={'/tasks'} component={TasksView}/>
                     </Container>
                 </Sidebar.Pusher>
             </Sidebar.Pushable>

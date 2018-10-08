@@ -4,6 +4,8 @@ import dramatiq
 import sqlalchemy
 import requests
 import uuid
+import time
+import enum
 
 import marshmallow as mm
 
@@ -40,11 +42,18 @@ class generic_actor(type):
                 })
 
             # Include the module in the actor name
-            actor_name = getattr(meta, 'actor_name', f'{clazz.__module__}.{clazz.__name__}')
+            default_name = '.'.join(clazz.__module__.split('.')[:2]) + '.' + clazz.__name__
+            actor_name = getattr(meta, 'actor_name', default_name)
             options.pop('actor_name', None)
 
+            def fn(*args, **kwargs):
+                """Create a new instance of the class for each call. This lets us attach a TaskContext to each
+                individual instance."""
+                new = clazz()
+                return new(*args, **kwargs)
+
             clazz_instance = clazz()
-            actor_instance = dramatiq.actor(clazz_instance, actor_name=actor_name, **options)
+            actor_instance = dramatiq.actor(fn, actor_name=actor_name, **options)
             setattr(clazz, "__getattr__", generic_actor.__getattr__)
             setattr(clazz_instance, "__actor__", actor_instance)
             return clazz_instance
@@ -113,6 +122,7 @@ class GenericActor(metaclass=generic_actor):
         return type(self).__name__
 
     def __call__(self, *args, **kwargs):
+        # Create a new instance for each call
         return self.perform(*args, **kwargs)
 
     def perform(self):
@@ -128,194 +138,110 @@ class GenericActor(metaclass=generic_actor):
 
 class TaskContext:
     """Holds context information for a task or group of tasks."""
-    expires = 30 * 60
     redis = redis.from_url(Config.REDIS_URL)
+    default_expire = 60
+
+    class Status(enum.Enum):
+        """Status codes for TaskContext."""
+        running = 1
+        paused = 2
+        cancelled = 3
+        complete = 4
+        unknown = 5
+        default = running
 
     # Magic methods
 
-    def __init__(self, *messages, id=None, **kwargs):
-        self.id = id or self._build_id()
-        self.title = kwargs.get('title', '')
-        self.data = kwargs.get('data', {})
-        self.messages = []
-        self.sent = kwargs.get('sent', [])
-        self.children = kwargs.get('children', [])
-        self.errors = kwargs.get('errors', [])
-        self.counts = kwargs.get('counts', {})
+    def __init__(self, *messages, id=None, data=None, status=None):
+        self._id = id or self._build_id()
+        self.bind(*messages)
 
-        if id is None:
-            self._update()
-        else:
-            self._refresh()
+        if data is not None:
+            self.data = data
 
-        for msg in messages:
-            self.bind(msg)
+        if status is not None:
+            self.status = status
 
     def __getitem__(self, item):
         """Access an item in the context data."""
-        self._refresh('data')
         return self.data[item]
 
     def __setitem__(self, key, value):
-        self._refresh('data')
-        self.data[key] = value
-        self._update('data')
+        data = self.data
+        data[key] = value
+        self.data = data
 
     def __contains__(self, item):
-        self._refresh('data')
         return item in self.data
 
     # Private methods
+
+    def _key_for(self, member):
+        """Build a key based on a data member's name."""
+        return f'{self._id}_{member}'
+
+    def _decode_dicts(self, *dicts):
+        """Decodes a mapping returned from Redis. If multiple dicts are provided, a tuple is returned."""
+        r = tuple(
+            {k.decode(): v.decode() for k, v in _dict.items()}
+            for _dict in dicts
+        )
+
+        if len(dicts) == 1:
+            return r[0]
+        else:
+            return r
+
+    def _decode_lists(self, *lists):
+        """Decodes a list of items returned from Redis. If multiple lists are provided, a tuple is returned."""
+        r = tuple(
+            [item.decode() for item in _list]
+            for _list in lists
+        )
+
+        if len(lists) == 1:
+            return r[0]
+        else:
+            return r
 
     def _build_id(self):
         """Creates an ID for a context."""
         return str(uuid.uuid4()) + '_ctx'
 
-    @staticmethod
-    def _load(id):
-        """Loads the entire data structure from redis."""
-        redis = TaskContext.redis
-
-        pipe = redis.pipeline()
-        pipe.get(id + '_data')
-        pipe.hgetall(id + '_scalars')
-        pipe.smembers(id + '_messages')
-        pipe.smembers(id + '_sent')
-        pipe.smembers(id + '_children')
-        pipe.hgetall(id + '_errors')
-        pipe.hgetall(id + '_counts')
-        data, scalars, messages, sent, children, errors, counts = pipe.execute()
-
-        data = {
-            'title': scalars.get(b'title', b'').decode(),
-            'data': json.loads(data) if data else {},
-            'messages': [dramatiq.Message(**json.loads(msg)) for msg in messages],
-            'sent': [msg_id.decode() for msg_id in sent],
-            'children': [child_id.decode() for child_id in children],
-            'errors': {msg_id.decode(): err.decode() for msg_id, err in errors.items()},
-            'counts': {act.decode(): int(cnt) for act, cnt in counts.items()}
-        }
-
-        return data
-
-    def _refresh(self, *members):
-        """Updates all or some of this context's member with data from Redis."""
-        members = members or ['title', 'data', 'messages', 'sent', 'children', 'errors', 'counts']
-        state = TaskContext._load(self.id)
-        for member in members:
-            setattr(self, member, state[member])
-
-    def _update(self, *members):
-        """Update Redis with some or all members of this context."""
-        members = members or ['title', 'data', 'messages', 'sent', 'children', 'errors', 'counts']
-        id = self.id
-        pipe = self.redis.pipeline()
-
-        for member in members:
-
-            if member == 'title':
-                pipe.hset(id + '_scalars', 'title', self.title)
-
-            elif member == 'data':
-                pipe.set(id + '_data', json.dumps(self.data))
-
-            elif member == 'messages' and self.messages:
-                pipe.sadd(id + '_messages', *[json.dumps(dict(msg.asdict())) for msg in self.messages])
-
-            elif member == 'sent' and self.sent:
-                pipe.sadd(id + '_sent', *self.sent)
-
-            elif member == 'children' and self.children:
-                pipe.sadd(id + '_children', *self.children)
-
-            elif member == 'errors' and self.errors:
-                pipe.hmset(id + '_errors', self.errors)
-
-            elif member == 'counts' and self.counts:
-                pipe.hmset(id + '_counts', self.counts)
-
-        pipe.execute()
-
-    # Properties
+    # Redis properties
 
     @property
-    def complete(self):
-        sent, total = self.progress()
-        try:
-            return sent / total == 1
-        except ZeroDivisionError:
-            return False
+    def id(self):
+        """Returns the ID of the context. This property is read-only."""
+        return self._id
 
-    # Public methods
+    @property
+    def data(self):
+        """The context's data dictionary."""
+        key = self._key_for('data')
+        data = self.redis.get(key)
 
-    def progress(self):
-        self._refresh('sent', 'messages', 'children')
+        if data:
+            return json.loads(data)
+        else:
+            return dict()
 
-        sent = len(self.sent)
-        total = len(self.messages)
+    @data.setter
+    def data(self, new):
+        key = self._key_for('data')
 
-        for child_id in self.children:
-            child = TaskContext(id=child_id)
-            child_sent, child_total = child.progress()
-            sent += child_sent
-            total += child_total
+        if new:
+            data = json.dumps(new)
+            self.redis.set(key, data)
+        else:
+            self.redis.delete(key)
 
-        return sent, total
-
-    def copy(self):
-        return self.data.copy()
-
-    def as_dict(self):
-        """Return a dictionary representation of the context object."""
-        return {
-            'id': self.id,
-            'title': self.title,
-            'data': self.data,
-            'messages': [dict(msg.asdict()) for msg in self.messages],
-            'sent': self.sent,
-            'children': self.children,
-            'errors': self.errors,
-            'counts': self.counts
-        }
-
-    @classmethod
-    def load(cls, id):
-        """Load a context from Redis."""
-        ctx = TaskContext(id=id)
-        ctx._refresh()
-        return ctx
-
-    def child(self, *messages, data=None, title=None):
-        """Create a child context and bind it to this context."""
-        child = TaskContext(*messages, title=title, data=data)
-        self.children.append(child.id)
-        self._update('children')
-        return child
-
-    def message_complete(self, idx):
-        """Update the status message for the action at :idx:."""
-        message_id = self.messages[idx].message_id
-        self.sent.append(message_id)
-        self._update('sent')
-
-    def log_error(self, msg_idx, err):
-        """Log an error."""
-        self._refresh('errors')
-
-        message_id = self.messages[msg_idx].message_id
-        self.errors[message_id] = err
-
-        self._update('errors')
-
-    def all_errors(self):
-        self._refresh('errors', 'children')
-
-        errors = {msg_id: err for msg_id, err in self.errors.items()}
-        for child_id in self.children:
-            child = TaskContext(id=child_id)
-            errors.update(**child.all_errors())
-
-        return errors
+    @property
+    def messages(self):
+        """The messages that this context will execute."""
+        key = self._key_for('messages')
+        data = self.redis.zrange(key, 0, -1)
+        return [dramatiq.Message(**json.loads(msg)) for msg in data]
 
     def bind(self, *messages):
         """Adds the message to this context's actions and returns a copy of the Dramatiq message,
@@ -323,56 +249,252 @@ class TaskContext:
         if not messages:
             return
 
-        self._refresh('messages')
+        key = self._key_for('messages')
+        add_messages = []
 
-        for message in messages:
-            # Check that this message isn't already bound
-            bound_ids = [msg.message_id for msg in self.messages]
-            if message.message_id in bound_ids:
-                return
+        for msg in messages:
+            kwargs = msg.kwargs.copy()
+            kwargs.update(_ctx=self._id, _msg_id=msg.message_id)
+            new_msg = msg.copy(kwargs=kwargs)
+            new_msg = json.dumps(dict(new_msg.asdict()))
+            add_messages.append(time.time())
+            add_messages.append(new_msg)
 
-            idx = len(self.messages)
-            kwargs = message.kwargs.copy()
-            opts = message.options.copy()
-
-            kwargs.update({'_ctx': self.id, '_ctx_idx': idx})
-
-            self.messages.append(message.copy(kwargs=kwargs, options=opts))
-
-        self._update('messages')
+        self.redis.execute_command('ZADD', key, 'NX', *add_messages)
+        self.persist()
         return self
+
+    @property
+    def sent(self):
+        """Messages already sent to the broker."""
+        key = self._key_for('sent')
+        data = self.redis.zrange(key, 0, -1)
+        return self._decode_lists(data)
 
     def send(self, *messages):
         """Send the first unsent message bound to this context. If :messages: are provided, they are bound to the
-        context before a message is sent."""
-        if messages:
-            self.bind(messages)
+        context before a message is sent. Returns True if a message is sent, otherwise False."""
 
-        self._refresh('messages', 'sent')
-        message = next((msg for msg in self.messages if msg.message_id not in self.sent), None)
-        if message is None:
+        # Bind the messages
+        self.bind(*messages)
+
+        if self.status != self.Status.running:
             return
 
-        self.sent.append(message.message_id)
-        self.counts[message.actor_name] = self.counts.get(message.actor_name, 0) + 1
-        self._update('sent', 'counts')
+        # Get the current state of messages and sent
+        sent_key = self._key_for('sent')
+        messages, sent, errors = self.messages, self.sent, self.errors
 
-        broker = dramatiq.get_broker()
-        broker.enqueue(message)
+        for msg in messages:
 
-    def send_all(self):
-        """Sends all messages simultaneously."""
-        raise NotImplementedError
+            if msg.message_id not in sent\
+                and msg.message_id not in errors\
+                    and self.redis.execute_command('ZADD', sent_key, 'NX', time.time(), msg.message_id):
 
-    def counts(self):
-        counts = self.counts.copy()
+                broker = dramatiq.get_broker()
+                broker.enqueue(msg)
+                self.count_message(msg)
+                return
+
+        completed, total = self.progress()
+        if completed == total:
+            self.status = self.Status.complete
+
+    @property
+    def completed(self):
+        """Messages that completed successfully."""
+        key = self._key_for('completed')
+        data = self.redis.zrange(key, 0, -1)
+        return self._decode_lists(data)
+
+    def complete(self, *message_ids):
+        """Add messages to the completed list."""
+        key = self._key_for('completed')
+        pipe = self.redis.pipeline()
+
+        for msg_id in message_ids:
+            pipe.execute_command('ZADD', key, 'NX', time.time(), msg_id)
+
+        pipe.execute()
+
+    @property
+    def children(self):
+        """Child contexts."""
+        key = self._key_for('children')
+        data = self.redis.zrange(key, 0, -1)
+        return self._decode_lists(data)
+
+    def child(self, *messages, data=None):
+        """Create a child context and bind it to this context."""
+        status = self.status
+        child_status = status if status in (self.Status.running, self.Status.paused, self.Status.cancelled) else None
+        child = TaskContext(*messages, data=data, status=child_status)
+
+        key = self._key_for('children')
+        self.redis.zadd(key, child.id, time.time())
+        self.persist()
+        return child
+
+    @property
+    def errors(self):
+        """A mapping of message IDs to error codes."""
+        key = self._key_for('errors')
+        data = self.redis.hgetall(key)
+        errors = self._decode_dicts(data)
+
         for child_id in self.children:
-            child_counts = TaskContext(id=child_id).counts()
+            child = TaskContext(id=child_id)
+            errors.update(**child.errors)
 
-            for actor in child_counts:
-                counts[actor] = counts.get(actor, 0) + 1
+        return errors
+
+    def log_error(self, msg_id, err):
+        """Logs an error."""
+        key = self._key_for('errors')
+        self.redis.hset(key, msg_id, err)
+
+    @property
+    def counts(self):
+        """How many times a given actor has been executed by this context, or one of its children."""
+        key = self._key_for('counts')
+        data = self.redis.hgetall(key)
+        counts = {k.decode(): int(v) for k, v in data.items()}
+        for child_id in self.children:
+            child_counts = TaskContext(id=child_id).counts
+
+            for actor, count in child_counts.items():
+                counts[actor] = counts.get(actor, 0) + count
 
         return counts
+
+    def count_message(self, msg):
+        key = self._key_for('counts')
+        self.redis.hincrby(key, msg.actor_name, 1)
+        self.redis.hincrby('actor_counts', msg.actor_name, 1)
+
+    def progress(self):
+        completed = len(self.completed)
+        total = len(self.messages)
+
+        for child_id in self.children:
+            child = TaskContext(id=child_id)
+            child_completed, child_total = child.progress()
+            completed += child_completed
+            total += child_total
+
+        return completed, total
+
+    @property
+    def status(self):
+        """Current execution status."""
+        key = self._key_for('status')
+        data = self.redis.get(key)
+        return self.Status(int(data)) if data is not None else self.Status.default
+
+    @status.setter
+    def status(self, status):
+        """Recursively set the status of this context and its children."""
+        if isinstance(status, int):
+            status = self.Status(status)
+        elif isinstance(status, str):
+            status = self.Status[status]
+
+        key = self._key_for('status')
+        self.redis.set(key, status.value)
+
+        if status in (self.Status.running, self.Status.paused, self.Status.cancelled):
+            for child_id in self.children:
+                child = TaskContext(id=child_id)
+                child.status = status
+
+        if status == self.Status.running:
+            self.send()
+
+    def copy(self):
+        return self.data.copy()
+
+    def as_dict(self):
+        """Return a dictionary representation of the context object."""
+
+        pipe = self.redis.pipeline()
+        pipe.get(self._key_for('data'))
+        pipe.zrange(self._key_for('messages'), 0, -1)
+        pipe.zrange(self._key_for('sent'), 0, -1)
+        pipe.zrange(self._key_for('completed'), 0, -1)
+        pipe.zrange(self._key_for('children'), 0, -1)
+        pipe.hgetall(self._key_for('errors'))
+        pipe.hgetall(self._key_for('counts'))
+        pipe.get(self._key_for('status'))
+        data, messages, sent, completed, children, errors, counts, status = pipe.execute()
+
+        data = json.loads(data) if data else {}
+        messages = [json.loads(msg) for msg in messages]
+        sent = self._decode_lists(sent)
+        completed = self._decode_lists(completed)
+        children = self._decode_lists(children)
+        errors = self._decode_dicts(errors)
+        counts = {k.decode(): int(v) for k, v in counts.items()}
+        status = self.Status(int(status)) if status is not None else self.Status.default
+
+        total_completed, total_messages = len(completed), len(messages)
+
+        for child_id in children:
+            child = TaskContext(id=child_id)
+
+            errors.update(child.errors)
+
+            child_completed, child_total = child.progress()
+            total_completed += child_completed
+            total_messages += child_total
+
+            child_counts = child.counts
+            for actor, count in child_counts.items():
+                counts[actor] = counts.get(actor, 0) + count
+
+        return {
+            'id': self.id,
+            'data': data,
+            'messages': messages,
+            'sent': sent,
+            'completed': completed,
+            'children': children,
+            'errors': errors,
+            'counts': counts,
+            'progress': (total_completed, total_messages),
+            'status': status.name
+        }
+
+    def expire(self, seconds=None):
+        """Set all keys on this context (and its children) to expire. If :seconds: is None, keys are
+        deleted immediately."""
+
+        for child_id in self.children:
+            child = TaskContext(id=child_id)
+            child.expire(seconds)
+
+        seconds = self.default_expire if seconds is None else seconds
+        members = ('data', 'messages', 'sent', 'completed', 'children', 'errors', 'counts', 'status')
+        keys = [self._key_for(member) for member in members]
+        pipe = self.redis.pipeline()
+        for key in keys:
+            pipe.expire(key, seconds)
+        pipe.execute()
+
+    def persist(self):
+        """Clear the expiration on all keys."""
+
+        for child_id in self.children:
+            child = TaskContext(id=child_id)
+            child.persist()
+
+        members = ('data', 'messages', 'sent', 'completed', 'children', 'errors', 'counts', 'status')
+        keys = [self._key_for(member) for member in members]
+        pipe = self.redis.pipeline()
+
+        for key in keys:
+            pipe.persist(key)
+
+        pipe.execute()
 
 
 ########################################################################################################################
@@ -406,38 +528,23 @@ class ColanderActor(GenericActor):
     class Schema(mm.Schema):
         """Schema for this actor's parameters."""
 
-    def _create_context(self, message, data):
-        """Create a context for this actor, if one wasn't supplied."""
-        context = TaskContext(message, title=type(self).__name__, data=data)
-        self.context = context
-        self.context_idx = 0
-
-    def _load_context(self, id, idx=None):
-        """Load a context using its ID."""
-        context = TaskContext(id=id)
-
-        self.context = context
-        self.context_idx = idx
-
-    def __call__(self, *, _ctx=None, _ctx_idx=None, **params):
+    def __call__(self, *, _ctx=None, _msg_id=None, **params):
         """Process a call to action."""
-
-        # Pull up the context, if any
+        # Load or create the context
         if _ctx is None or isinstance(_ctx, dict):
-            msg = dramatiq.Message(
-                queue_name='',
-                actor_name=self.actor_name,
-                args=[],
-                kwargs=params,
-                options={}
-            )
-            self._create_context(msg, _ctx)
+            message = self.message(**params)
+            context = TaskContext(message, data=_ctx)
+            self.context = context
+            self.message_id = message.message_id
         else:
-            self._load_context(_ctx, _ctx_idx)
+            context = TaskContext(id=_ctx)
+            self.context = context
+            self.message_id = _msg_id
 
         # Update the keyword arguments using values from the context
         fields = list(self.Schema._declared_fields)  # Use _declared_fields because it preserves declaration order
-        kwargs = {field: self.context[field] for field in fields if field in self.context}
+        ctx_data = context.data
+        kwargs = {field: ctx_data[field] for field in fields if field in ctx_data}
 
         # Override with actual keyword args if they we provided
         kwargs.update(params)
@@ -447,7 +554,7 @@ class ColanderActor(GenericActor):
 
         if loaded.errors:
             exc = mm.ValidationError(message=loaded.errors)
-            self.context.log_error(self.context_idx, str(exc))
+            context.log_error(_msg_id, str(exc))
             raise exc
 
         # Perform the action
@@ -455,16 +562,20 @@ class ColanderActor(GenericActor):
             try:
                 result = self.perform(**loaded.data)
             except Exception as e:
-                self.context.log_error(self.context_idx, str(e))
+                context.log_error(_msg_id, str(e))
                 raise e
             else:
-                self.context.send()
+                context.complete(_msg_id)
+                context.send()
                 return result
 
     @classmethod
     def validate(cls, **params):
         """Validate params against the actor's schema."""
         return cls.Schema().validate(params)
+
+    def perform(self, **kwargs):
+        raise NotImplementedError
 
 
 ########################################################################################################################

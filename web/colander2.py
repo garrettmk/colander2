@@ -1,5 +1,5 @@
 from pprint import pprint
-from core import app, db, search
+from app import app, db, search
 
 
 ########################################################################################################################

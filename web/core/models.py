@@ -94,7 +94,9 @@ def filter_with_json(query, js, obj_type=None):
         col = getattr(obj_type, attr)
         param = getattr(col, direction)()
         orderings.append(param)
-    query = query.order_by(*orderings)
+
+    if orderings:
+        query = query.order_by(*orderings)
 
     return query
 

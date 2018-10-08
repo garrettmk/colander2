@@ -1,7 +1,8 @@
 import marshmallow as mm
 import marshmallow.fields as mmf
 
-from models import Listing
+from core import db, filter_with_json
+from models import Listing, Vendor
 from ext.common import launch_spider, ExtActor
 
 
@@ -30,10 +31,18 @@ class UpdateListings(ExtActor):
 
     class Schema(mm.Schema):
         """Parameter schema for UpdateListings."""
-        listing_ids = mmf.List(mmf.Int(), required=True, title='Listing IDs')
+        query = mmf.Dict(missing=dict, title='Listings query')
 
-    def perform(self, listing_ids=None):
-        listings = Listing.query.filter(Listing.id.in_(listing_ids)).all()
+    def perform(self, query=None):
+        katom = Vendor.query.filter(
+            db.or_(
+                Vendor.url.ilike('%katom.com%'),
+                Vendor.name.ilike('katom%')
+            )
+        ).one()
+
+        query.update(vendor_id=katom.id)
+        listings = filter_with_json(Listing.query, query)
         urls = [listing.detail_url or f'http://www.katom.com/{listing.sku}.html' for listing in listings]
 
         self.context.send(

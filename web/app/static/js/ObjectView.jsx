@@ -1,14 +1,17 @@
 import React from "react";
 import marked from "marked";
+import update from "immutability-helper";
 
 import { Grid, Segment, Container, Image, Header, Button, Message, Divider, Select, Menu,
          Tab, Icon, Dropdown } from "semantic-ui-react";
 
-import Colander from "./colander";
 import { DocumentContext, NestedDocProvider, EditableDocProvider, ModelProvider, CollectionProvider,
          QueryContext, QueryProvider, SimilarProvider, PreviewProvider } from "./Contexts";
 import { ObjectTable, ObjectPreview, ObjectProperties, ObjectHeader, ObjectImage } from "./Objects";
+import { ListingActions, CoreListingActions } from "./ListingActions.jsx";
+import { VendorActions, CoreVendorActions } from "./VendorActions";
 import { defaultImages } from "./style";
+import {ExtensionProvider} from "./Context/ExtensionContext";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18,126 +21,6 @@ const bottomMenuStyle = {
     borderRadius: 0,
     marginTop: 0
 };
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class TaskCreator extends React.Component {
-
-    constructor (props) {
-        super(props);
-
-        this.send = this.send.bind(this);
-
-        this.state = {
-            action: undefined,
-            message: undefined,
-            msgSuccess: false
-        }
-    }
-
-    send (extId, params) {
-        Colander.sendTask({
-            ext_id: extId,
-            action: this.state.action,
-            params,
-
-            onSuccess: results => this.setState({
-                msgSuccess: true,
-                message: `Task sent! (${results.message_id})`
-            }),
-            onFailure: error => this.setState({
-                msgSuccess: false,
-                message: error
-            })
-        })
-    }
-
-    render () {
-        const { action, message, msgSuccess } = this.state;
-        const clearMessage = () => message && this.setState({ message: undefined });
-
-        return (
-            <DocumentContext.Consumer>
-                { ({ loading, doc }) => {
-                    const actionChoices = doc && doc.exports
-                        ? Object.keys(doc.exports).map(exp => ({ text: exp, value: exp }))
-                        : [];
-
-                    const schemas = doc && doc.exports && action
-                        ? { [action]: doc.exports[action].schema }
-                        : {};
-
-                    const sendTask = params => doc && this.send(doc.id, params);
-
-                    return (
-                        <Segment raised clearing loading={loading}>
-
-                            <PreviewProvider type={'Extension'} id={doc ? doc.id : undefined}>
-                                <ObjectPreview small/>
-                            </PreviewProvider>
-                            { doc &&
-                                <React.Fragment>
-                                    <Select
-                                        fluid
-                                        placeholder={'Select an action'}
-                                        options={actionChoices}
-                                        loading={loading}
-                                        value={action}
-                                        onChange={(e, { value }) => this.setState({ action: value })}
-                                    />
-
-                                    {action &&
-                                        <React.Fragment>
-                                            <Divider/>
-
-                                            <EditableDocProvider
-                                                type={action}
-                                                schemas={schemas}
-                                                onSave={sendTask}
-                                                onEdit={clearMessage}
-                                            >
-                                                <ObjectProperties as={'div'}/>
-
-                                                <Divider/>
-
-                                                <DocumentContext.Consumer>
-                                                    {({save}) => (
-                                                        <Button
-                                                            icon={'check'}
-                                                            floated={'right'}
-                                                            content={'Send'}
-                                                            onClick={save}
-                                                        />
-                                                    )}
-                                                </DocumentContext.Consumer>
-
-                                            </EditableDocProvider>
-
-                                            {message &&
-                                                <Message
-                                                    error={!msgSuccess}
-                                                >
-                                                    {message}
-                                                    <Button basic onClick={() => this.setState({ message: undefined })}>
-                                                        <Icon name={'check'}/>
-                                                        Ok
-                                                    </Button>
-                                                </Message>
-                                            }
-                                        </React.Fragment>
-                                    }
-                                </React.Fragment>
-                            }
-                        </Segment>
-                    )
-                }}
-            </DocumentContext.Consumer>
-        )
-    }
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -206,118 +89,139 @@ export function ListingDetails (props) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+const views = {
+    Vendor: { extension: { _exclude: [] } },
+    Listing: { vendor: { extension: { _only: ['id'] }}},
+    default: {}
+};
+
+
+const leftColumn = {
+    Vendor: (props) => (
+        <React.Fragment>
+
+            <PreviewProvider type={'Vendor'} id={props.id}>
+                <ObjectImage/>
+            </PreviewProvider>
+
+            <ObjectProperties only={['name', 'url', 'image_url', 'ext_id', 'avg_shipping', 'avg_tax', 'extra']}/>
+
+            <DocumentContext.Consumer>
+                { ({ doc }) => {
+                    let extId;
+                    try {
+                        extId = doc.extension.id;
+                    } catch (e) {
+                        extId = undefined;
+                    }
+
+                    return (
+                        <ExtensionProvider extId={extId}>
+                            <CoreVendorActions/>
+                            <VendorActions/>
+                        </ExtensionProvider>
+                    )
+                }}
+            </DocumentContext.Consumer>
+
+        </React.Fragment>
+    ),
+
+    Listing: (props) => (
+        <React.Fragment>
+            <PreviewProvider type={'Listing'} id={props.id}>
+                <ObjectImage/>
+            </PreviewProvider>
+
+            <ObjectProperties
+                only={['vendor_id', 'sku', 'title', 'brand', 'model', 'price', 'quantity', 'quantity_desc',
+                'rank', 'rating', 'detail_url', 'image_url', 'extra', 'last_modified']}
+            />
+
+            <DocumentContext.Consumer>
+                { ({ doc }) => {
+                    let extId;
+
+                    try {
+                        extId = doc.vendor.extension.id;
+                    } catch (e) {
+                        extId = undefined;
+                    }
+
+                    return (
+                        <ExtensionProvider extId={extId}>
+                            <ListingActions/>
+                            <CoreListingActions/>
+                        </ExtensionProvider>
+                    )
+                }}
+            </DocumentContext.Consumer>
+
+        </React.Fragment>
+    )
+};
+
+
+const mainContent = {
+    Vendor: (props) => {
+        const listingQuery = { vendor_id: props.id };
+        const listingView = { vendor: { _only: ['name'] } };
+
+        return (
+            <React.Fragment>
+                <QueryProvider type={'Listing'} query={listingQuery} view={listingView}>
+                    <QueryContext.Consumer>
+                        {({ type, query, view }) => (
+                            <CollectionProvider {...{type, query, view}}>
+                                <ObjectTable
+                                    only={['sku', 'Image', 'Summary', 'price']}
+                                    select
+                                />
+                            </CollectionProvider>
+                        )}
+                    </QueryContext.Consumer>
+                </QueryProvider>
+            </React.Fragment>
+        )
+    },
+
+    Listing: (props) => (
+        <React.Fragment>
+            <ListingDetails/>
+            <SimilarProvider id={props.id} view={{ vendor: { _only: ['name'] } }}>
+                <Segment raised>
+                    <Header>
+                        Similar Listings
+                    </Header>
+                    <ObjectTable
+                        as={'div'}
+                        only={['Score', 'Vendor/SKU', 'Image', 'Summary', 'price']}
+                        select
+                    />
+                </Segment>
+            </SimilarProvider>
+        </React.Fragment>
+    )
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 export default class ObjectView extends React.Component {
 
     constructor (props) {
         super(props);
-        this.sendCoreAction = this.sendCoreAction.bind(this);
         this.state = { leftColumnRef: undefined }
     }
 
-    sendCoreAction (action, params) {
-        return () => {
-            Colander.sendTask({
-                action,
-                params
-            })
-        }
-    }
-
     render ()  {
-        let view = {}, column1, column2, actions = () => [];
         let { type, id } = this.props.match.params;
-        ({ type, id } = {
-            type,
-            id: parseInt(id)
-        });
+        ({ type, id } = { type, id: parseInt(id) });
 
-        switch (type) {
-            case 'Vendor':
-                view = { extension: { _exclude: []} };
-                column1 = (
-                    <React.Fragment>
-                        <PreviewProvider type={type} id={id}>
-                            <ObjectImage/>
-                        </PreviewProvider>
-
-                        <ObjectProperties
-                            only={['name', 'url', 'image_url', 'ext_id', 'avg_shipping', 'avg_tax', 'extra']}
-                        />
-
-                        <NestedDocProvider node={'extension'}>
-                            <DocumentContext.Consumer>
-                                { ({ doc }) => doc ? <TaskCreator/> : <React.Fragment/>}
-                            </DocumentContext.Consumer>
-                        </NestedDocProvider>
-                    </React.Fragment>
-                );
-
-                column2 = (
-                    <React.Fragment>
-                        <QueryProvider type={'Listing'} query={{ vendor_id: id }} view={{ vendor: { _only: ['name'] } }}>
-                            <QueryContext.Consumer>
-                                {({ type, query, view }) => (
-                                        <CollectionProvider type={type} query={query} view={view}>
-                                            <ObjectTable
-                                                only={['sku', 'Image', 'Summary', 'price']}
-                                                select
-                                            />
-                                        </CollectionProvider>
-                                )}
-                            </QueryContext.Consumer>
-                        </QueryProvider>
-                    </React.Fragment>
-                );
-
-                actions = doc => [
-                    <Dropdown.Item key={1} onClick={this.sendCoreAction('ImportInventory', { vendor_id: doc.id })}>
-                        Import inventory
-                    </Dropdown.Item>
-                ];
-
-                break;
-
-            case 'Listing':
-                view = { vendor: { _only: ['name'] } };
-                column1 = (
-                    <React.Fragment>
-                        <PreviewProvider type={type} id={id}>
-                            <ObjectImage/>
-                        </PreviewProvider>
-
-                        <ObjectProperties
-                            only={['vendor_id', 'sku', 'title', 'brand', 'model', 'price', 'quantity', 'quantity_desc',
-                            'rank', 'rating', 'detail_url', 'image_url', 'extra']}
-                        />
-                    </React.Fragment>
-                );
-
-                column2 = (
-                    <React.Fragment>
-                        <ListingDetails/>
-                        <SimilarProvider id={id} view={{ vendor: { _only: ['name'] } }}>
-                            <Segment raised>
-                                <Header>
-                                    Similar Listings
-                                </Header>
-                                <ObjectTable
-                                    as={'div'}
-                                    only={['Score', 'Vendor/SKU', 'Image', 'Summary', 'price']}
-                                    select
-                                />
-                            </Segment>
-                        </SimilarProvider>
-                    </React.Fragment>
-                );
-
-                actions = doc => [
-                    <Dropdown.Item key={1} onClick={this.sendCoreAction('ImportMatchingListings', { listing_ids: [doc.id] })}>
-                        Find matching listings
-                    </Dropdown.Item>,
-                ];
-
-                break;
-        }
+        const view = views[type] || views.default;
+        const leftColumnElement = React.createElement(leftColumn[type], { type, id });
+        const mainContentElement = React.createElement(mainContent[type], { type, id });
 
         return (
             <ModelProvider {...{ type, id, view}}>
@@ -340,27 +244,16 @@ export default class ObjectView extends React.Component {
                                     <Icon name={'external'}/>
                                 </Menu.Item>
                             }
-
-                            {actions && (
-                                <Menu.Item>
-                                    <Dropdown item icon={'settings'}>
-                                        <Dropdown.Menu>
-                                            {actions(doc)}
-                                        </Dropdown.Menu>
-                                    </Dropdown>
-                                </Menu.Item>
-                            )}
-
                         </Menu>
                     )}
                 </DocumentContext.Consumer>
-                <Container fluid style={{ paddingLeft: '5em', paddingRight: '5em'}}>
+                <Container fluid style={{ paddingLeft: '5em', paddingRight: '5em', paddingBottom: '5em' }}>
                     <Grid columns={2}>
                         <Grid.Column width={4}>
-                            {column1}
+                            {leftColumnElement}
                         </Grid.Column>
                         <Grid.Column width={12}>
-                            {column2}
+                            {mainContentElement}
                         </Grid.Column>
                     </Grid>
 
@@ -378,7 +271,7 @@ export default class ObjectView extends React.Component {
                                 </Menu>
                         )}
                     </DocumentContext.Consumer>
-            </Container>
+                </Container>
             </ModelProvider>
         );
     }

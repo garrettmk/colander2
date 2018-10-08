@@ -74,6 +74,7 @@ class ListMatchingProducts(MWSActor):
         }
 
     def process_response(self, args, kwargs, response):
+        self.context['listings'] = response.products
         return response.products
 
 
@@ -89,6 +90,13 @@ class GetMyFeesEstimate(MWSActor):
 
         class ListingSchema(mm.Schema):
             sku = mmf.String(required=True, title='Listing SKU')
+
+            @mm.decorators.post_load(pass_original=True)
+            def include_all(self, data, original):
+                for key, value in original.items():
+                    if key not in data:
+                        data[key] = value
+                return data
 
         listing = mmf.Nested(ListingSchema, required=True, title='Listing document')
         market_id = mmf.String(missing='US', title='Market ID')
@@ -123,8 +131,8 @@ class GetMyFeesEstimate(MWSActor):
     def process_response(self, args, kwargs, response):
         doc = kwargs['listing']
 
-        if response.pop('status') == 'Success':
-            doc['selling_fees'] = response.selling_fees
+        if response['status'] == 'Success':
+            doc['selling_fees'] = response['selling_fees']
 
         self.context['listing'] = doc
         return doc
@@ -141,6 +149,13 @@ class GetCompetitivePricingForASIN(MWSActor):
         """Parameter schema for GetCompetitivePricingForASIN."""
         class ListingSchema(mm.Schema):
             sku = mmf.String(required=True, title='Listing SKU')
+
+            @mm.decorators.post_load(pass_original=True)
+            def include_all(self, data, original):
+                for key, value in original.items():
+                    if key not in data:
+                        data[key] = value
+                return data
 
         listing = mmf.Nested(ListingSchema, required=True, title='Listing document')
         market_id = mmf.String(missing='US', title='Market ID')
@@ -167,14 +182,13 @@ class GetCompetitivePricingForASIN(MWSActor):
         listing = kwargs['listing']
 
         if response.success:
+            listing['offers'] = response.offers
             price = response.landed_price or (response.listing_price + response.shipping)
-
             if price:
                 listing['price'] = price
 
-            listing['offers'] = response.offers
+            self.context['listing'] = listing
 
-        self.context['listing'] = listing
         return listing
 
 

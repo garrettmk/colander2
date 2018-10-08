@@ -3,7 +3,7 @@ import dramatiq.composition as dqc
 import marshmallow as mm
 import marshmallow.fields as mmf
 
-from core import db
+from core import db, filter_with_json
 from ext.common import ExtActor
 from models import Vendor, Customer, Listing, ListingDetails, Inventory, Order, OrderItem, Shipment,\
     FinancialAccount, FinancialEvent, OrderEvent, OrderItemEvent
@@ -24,6 +24,13 @@ class ImportListing(ExtActor):
         """Parameter schema for ImportListing."""
         class ListingSchema(mm.Schema):
             sku = mmf.String(required=True, title='Listing SKU')
+
+            @mm.decorators.post_load(pass_original=True)
+            def include_all(self, data, original):
+                for key, value in original.items():
+                    if key not in data:
+                        data[key] = value
+                return data
 
         listing = mmf.Nested(ListingSchema, required=True, title='Listing document')
 
@@ -61,51 +68,69 @@ class UpdateListings(ExtActor):
 
     class Schema(mm.Schema):
         """Parameter schema for UpdateListings."""
-        listing_ids = mmf.List(mmf.Int(), required=True, title='Listing IDs')
+        query = mmf.Dict(missing=dict, title='Listing query')
 
-    def perform(self, listing_ids=None):
-        listings = Listing.query.filter(Listing.id.in_(listing_ids)).all()
-        child_data = self.context.copy()
+    def perform(self, query=None):
+        amazon = Vendor.query.filter(
+            db.or_(
+                Vendor.url.ilike('%amazon.com%'),
+                Vendor.name.ilike('amazon'),
+                Vendor.name.ilike('amazon.com')
+            )
+        ).one()
+
+        query.update(vendor_id=amazon.id)
+        listings = filter_with_json(Listing.query, query)
 
         for listing in listings:
-            child_data.update(listing={'sku': listing.sku})
-
             self.context.child(
                 mws.GetCompetitivePricingForASIN.message(),
                 pa.ItemLookup.message(),
                 mws.GetMyFeesEstimate.message(),
                 ImportListing.message(),
 
-                title=f'UpdateListing {listing.sku}',
-                data=child_data
+                title=f'Update SKU #{listing.sku}',
+                data={'listing': {'sku': listing.sku}}
             ).send()
 
 
 ########################################################################################################################
 
 
-class ImportMatches(ExtActor):
+class ImportMatchingListings(ExtActor):
     """Search the vendor and import any listings that match the given product."""
     public = True
 
     class Schema(mm.Schema):
         """Parameter schema for ImportMatches."""
-        listing_id = mmf.Int(required=True, title='Listing ID')
+        query = mmf.Dict(missing=dict, title='Listings query')
 
-    def perform(self, listing_id=None):
-        listing = Listing.query.filter_by(id=listing_id).one()
+    def perform(self, query=None):
+        amazon = Vendor.query.filter(
+            db.or_(
+                Vendor.url.ilike('%amazon.com%'),
+                Vendor.name.ilike('amazon'),
+                Vendor.name.ilike('amazon.com')
+            )
+        ).one()
 
-        if listing.brand and listing.model:
-            query_str = f'{listing.brand} {listing.model}'
-        elif listing.title:
-            query_str = listing.title
-        else:
-            raise ValueError('Listing does not contain enough information to match.')
+        # Modify the filter to exclude listings from Amazon
+        listings = filter_with_json(Listing.query, query).filter(Listing.vendor_id != amazon.id)
 
-        self.context.bind(
-            mws.ListMatchingProducts.message(query=query_str),
-            ProcessListings.message()
-        )
+        for listing in listings:
+            if listing.brand and listing.model:
+                query_str = f'{listing.brand} {listing.model}'
+            elif listing.title:
+                query_str = listing.title
+            else:
+                raise ValueError('Listing does not contain enough information to match.')
+
+            self.context.child(
+                mws.ListMatchingProducts.message(query=query_str),
+                ProcessListings.message(),
+
+                data={'vendor_id': listing.vendor_id}
+            ).send()
 
 
 class ProcessListings(ExtActor):
@@ -113,18 +138,20 @@ class ProcessListings(ExtActor):
 
     class Schema(mm.Schema):
         """Parameter schema for ProcessListings."""
-        docs = mmf.List(mmf.Dict(), required=True, title='Listing documents')
+        listings = mmf.List(mmf.Dict(), required=True, title='Listing documents')
 
-    def perform(self, docs=None):
-        for doc in docs:
+    def perform(self, listings=None):
+        for doc in listings:
             self.context.child(
                 mws.GetCompetitivePricingForASIN.message(),
                 pa.ItemLookup.message(),
                 mws.GetMyFeesEstimate.message(),
                 ImportListing.message(),
 
-                title=f'ProcessListing - {doc["sku"]}',
-                data={'doc': doc}
+                data={
+                    'listing': doc,
+                    'vendor_id': self.context['vendor_id']
+                }
             ).send()
 
 
@@ -460,7 +487,7 @@ class ProcessFinancialEventGroups(ExtActor):
         for group_doc in docs:
             dqc.pipeline([
                 mws.ListFinancialEvents.message(group_id=group_doc['group_id'], vendor_id=vendor_id),
-                process_financial_events.message(vendor_id, group_doc)
+                ProcessFinancialEvents.message(vendor_id, group_doc)
             ]).run()
 
 

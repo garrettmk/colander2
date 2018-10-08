@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 import marshmallow as mm
 import marshmallow.fields as mmf
 
+from core import filter_with_json
 from models import Listing, Vendor
 
 from .common import db, OpsActor, search
@@ -22,6 +23,13 @@ class ImportListing(OpsActor):
             vendor_id = mmf.Int(title='Vendor ID')
             detail_url = mmf.Url(title='Detail page URL')
 
+            @mm.decorators.post_load(pass_original=True)
+            def include_all(self, data, original):
+                for key, value in original.items():
+                    if key not in data:
+                        data[key] = value
+                return data
+
             @mm.decorators.validates_schema()
             def validate(self, data):
                 if 'vendor_id' not in data and 'detail_url' not in data:
@@ -30,31 +38,29 @@ class ImportListing(OpsActor):
         listing = mmf.Nested(ListingSchema, required=True, title='Listing document')
 
     def perform(self, listing=None):
-        doc = listing
-
         # Do some basic cleaning
-        for field, value in doc.items():
+        for field, value in listing.items():
             if isinstance(value, str):
-                doc[field] = value.strip()
+                listing[field] = value.strip()
 
         # Try to locate the listing in the database
-        sku = doc.pop('sku')
-        vendor_id = doc.pop('vendor_id', None)
+        sku = listing.pop('sku')
+        vendor_id = listing.pop('vendor_id', None)
 
         if vendor_id is None:
-            netloc = urlparse(doc['detail_url'])[1]
+            netloc = urlparse(listing['detail_url'])[1]
             vendor = Vendor.query.filter(Vendor.url.ilike(f'%{netloc}%')).one()
             vendor_id = vendor.id
 
-        listing = Listing.query.filter_by(vendor_id=vendor_id, sku=sku).one_or_none()\
+        model = Listing.query.filter_by(vendor_id=vendor_id, sku=sku).one_or_none()\
                     or Listing(vendor_id=vendor_id, sku=sku)
 
         # Update and commit
-        listing.update(doc)
-        db.session.add(listing)
+        model.update(listing)
+        db.session.add(model)
         db.session.commit()
 
-        return listing.id
+        return model.id
 
 
 ########################################################################################################################
@@ -65,19 +71,40 @@ class ImportMatchingListings(OpsActor):
     public = True
 
     class Schema(mm.Schema):
-        listing_ids = mmf.List(mmf.Int(), required=True, title='Listing IDs')
+        query = mmf.Dict(missing=dict, title='Listings query')
 
-    def perform(self, listing_ids=None):
-        vendors = Vendor.query.all()
+    def perform(self, query=None):
+        for vendor in Vendor.query.all():
+            try:
+                message = vendor.extension.message('ImportMatchingListings')
+            except (ValueError, AttributeError):
+                continue
+
+            self.context.bind(message)
+
+
+########################################################################################################################
+
+
+class UpdateListings(OpsActor):
+    """Update all listings in the given query, if their vendor extension provides an UpdateListings action."""
+    public = True
+
+    class Schema(mm.Schema):
+        """Parameter schema from UpdateListings."""
+        query = mmf.Dict(missing=dict, title='Listing query')
+
+    def perform(self, query=None):
+        """Delegate the update operation to the vendor extensions."""
+        vendors = filter_with_json(Vendor.query, {'listings': query})
 
         for vendor in vendors:
             try:
-                for listing_id in listing_ids:
-                    vendor.extension.send('ImportMatches', context={'listing_id': listing_id})
-            except (TypeError, ValueError, AttributeError):
+                message = vendor.extension.message('UpdateListings')
+            except (ValueError, AttributeError):
                 continue
 
-        return listing_ids
+            self.context.bind(message)
 
 
 ########################################################################################################################

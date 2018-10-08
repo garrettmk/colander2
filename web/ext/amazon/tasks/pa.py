@@ -19,6 +19,13 @@ class ItemLookup(MWSActor):
         class ListingSchema(mm.Schema):
             sku = mmf.String(required=True, title='Listing SKU')
 
+            @mm.decorators.post_load(pass_original=True)
+            def include_all(self, data, original):
+                for key, value in original.items():
+                    if key not in data:
+                        data[key] = value
+                return data
+
         listing = mmf.Nested(ListingSchema, required=True, title='Listing document')
 
     class ResponseSchema(MWSResponseSchema):
@@ -59,9 +66,7 @@ class ItemLookup(MWSActor):
     }
 
     def process_response(self, args, kwargs, response):
-        from pprint import pprint
-        pprint(response)
-        doc = kwargs.pop('listing')
+        doc = kwargs['listing']
 
         if response.products:
             doc.update(response.products[0])

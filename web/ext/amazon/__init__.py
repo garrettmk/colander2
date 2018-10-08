@@ -1,4 +1,4 @@
-from .amazon import ImportListing, ImportMatches, UpdateListings, ProcessListings, ImportInventory, \
+from .amazon import ImportListing, ImportMatchingListings, UpdateListings, ProcessListings, ImportInventory, \
     ProcessInventory, ImportInboundOrder, ImportInboundOrders, ProcessInboundOrders, \
     ProcessInboundOrderItems, ProcessInboundShipments, CopyToListing, ImportOrders, ProcessOrders, \
     ProcessOrderItems, ProcessFinancialEventGroups, ImportFinancials, ProcessFinancialEvents
@@ -9,7 +9,7 @@ from .tasks.pa import ItemLookup
 
 __all__ = [
     'ImportListing',
-    'ImportMatches',
+    'ImportMatchingListings',
     'ProcessListings',
     'UpdateListings',
     'ImportInventory',

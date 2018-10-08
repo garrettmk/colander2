@@ -39,14 +39,14 @@ class _ObjectPreview extends React.Component {
     }
 
     render () {
-        const { small, onChange} = this.props;
+        const { small, onChange, style } = this.props;
         const { searching } = this.state;
 
         return (
             <DocumentContext.Consumer>
                 { ({ preview, type }) => (
                     <React.Fragment>
-                        <Item.Group link onClick={() => preview && this.props.history.push(`/${type}/${preview.id}`)}>
+                        <Item.Group link style={style} onClick={() => preview && this.props.history.push(`/${type}/${preview.id}`)}>
                             <Item>
                                 <Item.Image size={small ? 'mini' : 'small'} src={preview
                                     ? preview.image
